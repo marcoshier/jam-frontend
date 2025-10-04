@@ -1,0 +1,27 @@
+html, body {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    background-color: red;
+    width: 100%;
+    min-height: 100vh;
+}
+
+#jam-app {
+    position: absolute;
+    background-color: white;
+    margin: 0;
+    padding: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#jam-app canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
