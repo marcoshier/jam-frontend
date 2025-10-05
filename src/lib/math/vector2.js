@@ -80,6 +80,18 @@ export class Vector2 {
         return new Vector2(this.y, -this.x);
     }
 
+    mix(v, t) {
+        return new Vector2(
+            this.x + (v.x - this.x) * t,
+            this.y + (v.y - this.y) * t
+        );
+    }
+
+    clamp(minX, minY, maxX, maxY) {
+        this.x = Math.max(minX, Math.min(this.x, maxX));
+        this.y = Math.max(minY, Math.min(this.y, maxY));
+    }
+
     scale(origin, amount) {
         const translated = this.sub(origin);
         const scaled = translated.mul(amount);
