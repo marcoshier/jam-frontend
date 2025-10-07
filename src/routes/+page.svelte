@@ -1,14 +1,16 @@
 <script>
-	import { Rectangle } from '$lib/components/Rectangle.svelte';
+
     import { onMount } from 'svelte';
 	import { projects } from '$lib/stores/projects.js';
 	import { posts } from '$lib/stores/posts.js';
-	import { cycleImages, fadeInLeft, fadeInRight, InitAnim } from '$lib/draw/anim.js';
-	import { cleanupUI, hoveredType, InitUI } from '$lib/stores/ui';
-	import { InitMedia } from '$lib/stores/media.js';
+	import { InitAnim, cycleImages, fadeInLeft, fadeInRight } from '$lib/draw/anim.js';
+	import { InitUI, cleanupUI, hoveredType } from '$lib/stores/ui';
+	import { InitMedia, isComplete, progress } from '$lib/stores/media.js';
 	import { InitCanvas } from '$lib/draw/canvas.js';
-	import { InitRectangles } from '$lib/stores/rectangles.js';
+	import { InitFrames } from '$lib/stores/frames.js';
+    import { Frame } from '$lib/components/Frame.svelte';
 	import { draw } from '$lib/draw/draw.js';
+	import Loader from '$lib/components/Loader.svelte';
 
     let { data } = $props();
 
@@ -29,7 +31,7 @@
         posts.set(data.posts)
 
         InitCanvas();
-        InitRectangles(data);
+        InitFrames(data);
         InitUI();
         InitAnim();
 
@@ -57,8 +59,9 @@
             <h1>POSTS</h1>
         </section>
     </div>
-    
 </div>
+
+<Loader/>
 
 <style scoped>
     #section-container {

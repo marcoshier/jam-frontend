@@ -1,10 +1,28 @@
 <script>
+	import { animationState } from "$lib/draw/anim";
 	import { isComplete, progress } from "$lib/stores/media";
+	import gsap from "gsap";
+	import { get } from "svelte/store";
+
+    let isTransitionComplete = $state(false);
+    let loaderTRef = $state(1.0);
+
+    $effect(() => {
+        if($isComplete) {
+            gsap.to(animationState, {
+                delay: 0.65,
+                loaderT: 0.0,
+                duration: 1.5,
+                onUpdate: () => loaderTRef = animationState.loaderT,
+                onComplete: () => isTransitionComplete = true
+            })
+        }
+    })
 </script>
 
-{#if !get(isComplete)}
-    <div class="loader-container">
-        <p>{Math.round(get(progress))}%</p>
+{#if !isTransitionComplete}
+    <div class="loader-container" style:opacity="{loaderTRef}">
+        <p>{Math.round($progress)}%</p>
     </div>
 {/if}
 

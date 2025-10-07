@@ -1,14 +1,17 @@
+import { imageFit } from "$lib/draw/image";
 import { map } from "$lib/math/map";
 import { mix, mod } from "$lib/math/number";
 import { Vector2 } from "$lib/math/vector2";
-import { postRectangles, projectRectangles } from "$lib/stores/rectangles";
-import { hoveredIdx, hoveredType, mousePos } from "$lib/stores/ui";
+import { postFrames, projectFrames } from "$lib/stores/frames";
+import { projectImages } from "$lib/stores/media";
+import { hoveredId, hoveredType, mousePos } from "$lib/stores/ui";
 import gsap from "gsap";
 import { get } from 'svelte/store';
 
-export class Rectangle {
-    constructor(id, z, type) {        
-        this.id = id;
+export class Frame {
+    constructor(idx, id, z, type) {       
+        this.id = id; ``
+        this.idx = idx;
         this.pos = new Vector2(0, 0);
         this.smoothPos = new Vector2(0, 0); 
         this.width = 0;
@@ -31,7 +34,7 @@ export class Rectangle {
     }
     
     calculateWidth() {
-        const rects = this.type === "b" ? get(postRectangles) : get(projectRectangles);
+        const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
         const nRects = rects.length;
         if (nRects === 0) return;
         
@@ -72,10 +75,8 @@ export class Rectangle {
 
         this.pos = newPos;
         this.height = height;
-        this.color = '#ffffff';
-        this.hoverColor = '#ffffff';
 
-        const rects = this.type === "b" ? get(postRectangles) : get(projectRectangles);
+        const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
         const nRects = rects.length;
         const zDiff = Math.abs(this.zOffset - oldZOffset);
         
@@ -99,7 +100,7 @@ export class Rectangle {
         ctx.beginPath();
         ctx.rect(pos.x, pos.y, this.width, this.height);
 
-        const rects = this.type === "b" ? get(postRectangles) : get(projectRectangles);
+        const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
         const nextRect = rects.find(r => r.zOffset === this.zOffset + 1);
         
         if (nextRect) {
@@ -107,12 +108,23 @@ export class Rectangle {
             ctx.rect(nextPos.x, nextPos.y, nextRect.width, nextRect.height);
         }
         
-        this.hovered = get(hoveredType) === this.type && get(hoveredIdx) === this.id;
+        this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
 
         ctx.clip('evenodd'); 
-        ctx.fillStyle = this.hovered ? '#ff0000' : '#ffffff';
-        ctx.fillRect(pos.x, pos.y, this.width, this.height);
-        
+
+        if(this.hovered) {
+            const images = get(projectImages).get(this.id);
+            
+            if(images && images.length > 0) {
+                const image = images[0];
+                imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
+            } else {
+                // Fallback
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(pos.x, pos.y, this.width, this.height);
+            }
+        }
+
         ctx.restore();
 
         ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
