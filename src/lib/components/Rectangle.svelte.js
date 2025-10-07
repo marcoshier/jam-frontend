@@ -3,6 +3,7 @@ import { mix, mod } from "$lib/math/number";
 import { Vector2 } from "$lib/math/vector2";
 import { postRectangles, projectRectangles } from "$lib/stores/rectangles";
 import { hoveredIdx, hoveredType, mousePos } from "$lib/stores/ui";
+import gsap from "gsap";
 import { get } from 'svelte/store';
 
 export class Rectangle {
@@ -89,15 +90,15 @@ export class Rectangle {
         this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
     }
 
-
-    draw(ctx) {
+    draw(ctx, state) {
+        ctx.globalAlpha = this.type === "p" ? state.lop : state.rop;
         ctx.save();
 
         const pos = this.smoothPos;
-    
+
         ctx.beginPath();
         ctx.rect(pos.x, pos.y, this.width, this.height);
-    
+
         const rects = this.type === "b" ? get(postRectangles) : get(projectRectangles);
         const nextRect = rects.find(r => r.zOffset === this.zOffset + 1);
         
@@ -108,12 +109,12 @@ export class Rectangle {
         
         this.hovered = get(hoveredType) === this.type && get(hoveredIdx) === this.id;
 
-        ctx.clip('evenodd');
+        ctx.clip('evenodd'); 
+        
         ctx.fillStyle = this.hovered ? '#ff0000' : '#ffffff';
         ctx.fillRect(pos.x, pos.y, this.width, this.height);
-        
         ctx.restore();
-    
+
         ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
         ctx.lineWidth = 1;
         ctx.strokeRect(pos.x, pos.y, this.width, this.height);

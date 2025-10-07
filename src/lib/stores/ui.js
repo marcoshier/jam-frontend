@@ -56,11 +56,17 @@ export const handleMouseMove = (e) => {
     }
 }
 
-export const setupListeners = (canvas) => {
-    window.addEventListener('wheel', handleScroll);
-    canvas.addEventListener('mousemove', handleMouseMove);
+export const cleanupUI = () => {
+    window.removeEventListener('wheel', handleScroll)
+    window.removeEventListener('mousemove', handleMouseMove)
 }
 
-export const InitUI = (canvas) => {
-    setupListeners(canvas);
+export const setupListeners = () => {
+    window.addEventListener('wheel', handleScroll);
+    window.addEventListener('wheel', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove);
+}
+
+export const InitUI = () => {
+    setupListeners();
 }
