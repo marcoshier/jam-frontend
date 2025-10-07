@@ -1,16 +1,17 @@
 <script>
 
     import { onMount } from 'svelte';
-	import { projects } from '$lib/stores/projects.js';
+	import { projects, projectsById } from '$lib/stores/projects.js';
 	import { posts } from '$lib/stores/posts.js';
 	import { InitAnim, cycleImages, fadeInLeft, fadeInRight } from '$lib/draw/anim.js';
-	import { InitUI, cleanupUI, hoveredType } from '$lib/stores/ui';
+	import { InitUI, cleanupUI, hoveredId, hoveredType } from '$lib/stores/ui';
 	import { InitMedia, isComplete, progress } from '$lib/stores/media.js';
 	import { InitCanvas } from '$lib/draw/canvas.js';
 	import { InitFrames } from '$lib/stores/frames.js';
     import { Frame } from '$lib/components/Frame.svelte';
 	import { draw } from '$lib/draw/draw.js';
 	import Loader from '$lib/components/Loader.svelte';
+	import { get } from 'svelte/store';
 
     let { data } = $props();
 
@@ -21,6 +22,12 @@
             fadeInRight()
         }
     })
+
+    const projectTitle = $derived(
+        $hoveredType == "p" 
+        ? $projectsById.get($hoveredId)?.title 
+        : "PROJECTS"
+    );
 
     const start = () => {
         cycleImages();
@@ -52,7 +59,7 @@
     
     <div id="section-container">
         <section id="projects-view" class="view">
-            <h1>PROJECTS</h1>
+            <h1>{projectTitle}</h1>
         </section>
 
         <section id="blog-view" class="view">
