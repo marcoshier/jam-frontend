@@ -110,9 +110,9 @@ export class Rectangle {
         this.hovered = get(hoveredType) === this.type && get(hoveredIdx) === this.id;
 
         ctx.clip('evenodd'); 
-        
         ctx.fillStyle = this.hovered ? '#ff0000' : '#ffffff';
         ctx.fillRect(pos.x, pos.y, this.width, this.height);
+        
         ctx.restore();
 
         ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
