@@ -1,3 +1,4 @@
+import { animationState } from "$lib/draw/anim.svelte";
 import { imageFit } from "$lib/draw/image";
 import { map } from "$lib/math/map";
 import { mix, mod } from "$lib/math/number";
@@ -91,11 +92,11 @@ export class Frame {
         this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
     }
 
-    draw(ctx, state) {
-        ctx.globalAlpha = this.type === "p" ? state.lop : state.rop;
+    draw(ctx) {
         ctx.save();
 
         const pos = this.smoothPos;
+        const alpha = (this.type === "p" ? animationState.lop : animationState.rop) * (1.0 - animationState.loaderT);
 
         ctx.beginPath();
         ctx.rect(pos.x, pos.y, this.width, this.height);
@@ -117,18 +118,21 @@ export class Frame {
             
             if(images && images.length > 0) {
                 const image = images[0];
+                ctx.globalAlpha = alpha; // Set alpha before drawing image
                 imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
             } else {
                 // Fallback
+                ctx.globalAlpha = alpha; // Set alpha before drawing rect
                 ctx.fillStyle = '#ff0000';
                 ctx.fillRect(pos.x, pos.y, this.width, this.height);
             }
         }
 
-        ctx.restore();
-
+        ctx.globalAlpha = alpha; // Set alpha before drawing stroke
         ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
         ctx.lineWidth = 1;
         ctx.strokeRect(pos.x, pos.y, this.width, this.height);
+        
+        ctx.restore();
     }
 }

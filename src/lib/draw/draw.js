@@ -1,12 +1,13 @@
 import { get } from "svelte/store";
-import { animationState } from "./anim";
+import { animationState } from "./anim.svelte";
 import { canvas, ctx, withClip } from "./canvas";
 import { postFrames, projectFrames, sortedProjectFrames } from '$lib/stores/frames';
 import { imageFit } from "./image";
-import { projectImages } from "$lib/stores/media";
+import { progress, projectImages } from "$lib/stores/media";
 
 const drawImageFrame = (frame) => {
-    ctx.globalAlpha = animationState.imageT;
+    ctx.globalAlpha = (frame.type === "p" ? animationState.lop : animationState.rop) * 
+        (1.0 - animationState.loaderT) * animationState.imageT;
     
     const images = get(projectImages).get(frame.id);
                 
@@ -58,7 +59,7 @@ export const draw = () => {
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(window.innerWidth / 2, 0);
-    ctx.lineTo(window.innerWidth / 2, window.innerHeight);
+    ctx.lineTo(window.innerWidth / 2, window.innerHeight * (get(progress) / 100.0));
     ctx.stroke();
 
 

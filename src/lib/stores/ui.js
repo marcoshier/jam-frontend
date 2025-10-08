@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store";
 import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes } from "./frames";
 import { mod } from "$lib/math/number";
 import { Vector2 } from "$lib/math/vector2";
-import { animationState } from "$lib/draw/anim";
+import { animationState } from "$lib/draw/anim.svelte";
 
 export let scrollYprojects = writable(0);
 export let scrollYposts = writable(0);

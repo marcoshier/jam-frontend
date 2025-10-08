@@ -1,28 +1,19 @@
 <script>
-	import { animationState } from "$lib/draw/anim";
+	import { animationState } from "$lib/draw/anim.svelte";
 	import { isComplete, progress } from "$lib/stores/media";
 	import gsap from "gsap";
 	import { get } from "svelte/store";
-
-    let isTransitionComplete = $state(false);
-    let loaderTRef = $state(1.0);
-
-    $effect(() => {
-        if($isComplete) {
-            gsap.to(animationState, {
-                delay: 0.65,
-                loaderT: 0.0,
-                duration: 1.5,
-                onUpdate: () => loaderTRef = animationState.loaderT,
-                onComplete: () => isTransitionComplete = true
-            })
-        }
-    })
+	import Sections from "./Sections.svelte";
 </script>
 
-{#if !isTransitionComplete}
-    <div class="loader-container" style:opacity="{loaderTRef}">
-        <p>{Math.round($progress)}%</p>
+{#if !animationState.isTransitionComplete}
+    <div class="loader-container" style:opacity="{animationState.loaderT}">
+        <Sections 
+        overrideProjectTitle={"JEROEN"} 
+        overridePostsTitle={"MEIJER"}
+        opacityLeft={animationState.loaderT * animationState.tlop}
+        opacityRight={animationState.loaderT * animationState.trop}
+        ></Sections>
     </div>
 {/if}
 
@@ -33,7 +24,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: gainsboro;
+        background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
