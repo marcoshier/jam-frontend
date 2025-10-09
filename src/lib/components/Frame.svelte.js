@@ -2,7 +2,7 @@ import { animationState } from "$lib/draw/anim.svelte";
 import { imageFit } from "$lib/draw/image";
 import { map } from "$lib/math/map";
 import { mix, mod } from "$lib/math/number";
-import { Vector2 } from "$lib/math/vector2";
+import { screenOrigin, Vector2 } from "$lib/math/vector2";
 import { postFrames, projectFrames } from "$lib/stores/frames";
 import { projectImages } from "$lib/stores/media";
 import { hoveredId, hoveredType, mousePos } from "$lib/stores/ui";
@@ -22,6 +22,7 @@ export class Frame {
         this.type = type;
         this.scroll = 0;
         this.hovered = false;
+        this.selected = false;
     }
 
     center = $derived(this.smoothPos.plus(new Vector2(this.width / 2, this.height / 2)));
@@ -43,6 +44,7 @@ export class Frame {
         
         this.width = (window.innerWidth / 2) * Math.pow(0.9, this.zOffset);
         this.width = Math.min(this.width, window.innerWidth / 2);
+        this.width = mix(this.width, window.innerWidth / 2.0, animationState.selectionT);
     }
 
     update() {
@@ -75,7 +77,10 @@ export class Frame {
         }
 
         this.pos = newPos;
+        this.pos = this.pos.mix(screenOrigin, animationState.selectionT);
+
         this.height = height;
+        this.height = mix(this.height, window.innerHeight, animationState.selectionT);
 
         const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
         const nRects = rects.length;
@@ -107,13 +112,13 @@ export class Frame {
         if (nextRect) {
             const nextPos = nextRect.smoothPos;
             ctx.rect(nextPos.x, nextPos.y, nextRect.width, nextRect.height);
+            ctx.clip('evenodd'); 
         }
         
         this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
 
-        ctx.clip('evenodd'); 
 
-        if(this.hovered) {
+        if(this.hovered || !nextRect) {
             const images = get(projectImages).get(this.id);
             
             if(images && images.length > 0) {
@@ -134,5 +139,8 @@ export class Frame {
         ctx.strokeRect(pos.x, pos.y, this.width, this.height);
         
         ctx.restore();
+
+
+
     }
 }

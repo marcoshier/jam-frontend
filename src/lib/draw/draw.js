@@ -4,12 +4,13 @@ import { canvas, ctx, withClip } from "./canvas";
 import { postFrames, projectFrames, sortedProjectFrames } from '$lib/stores/frames';
 import { imageFit } from "./image";
 import { progress, projectImages } from "$lib/stores/media";
+import { hoveredId, hoveredType } from "$lib/stores/ui";
 
 const drawImageFrame = (frame) => {
-    ctx.globalAlpha = (frame.type === "p" ? animationState.lop : animationState.rop) * 
-        (1.0 - animationState.loaderT) * animationState.imageT;
+    ctx.globalAlpha = (hoveredType === "p" ? animationState.lop : animationState.rop);
     
-    const images = get(projectImages).get(frame.id);
+    const hid = get(hoveredId)
+    const images = get(projectImages).get(hid);
                 
     if(images && images.length > 0) {
         const image = images[0];
@@ -18,20 +19,15 @@ const drawImageFrame = (frame) => {
 }
 
 const drawProjectFrames = (state) => {
-    get(projectFrames).forEach(frame => {
+    const frames = get(projectFrames)
+
+    frames.forEach(frame => {
         frame.update();
     });
 
-    get(projectFrames).forEach((frame, index) => {
+    frames.forEach((frame, index) => {
         frame.draw(ctx, state);
     });
-
-    let targetZ = animationState.previewFramesZs[animationState.currentIdx];
-    let targetFrame = get(sortedProjectFrames)[targetZ];
-
-    if(targetFrame != null && targetFrame !== undefined) {
-        drawImageFrame(targetFrame);
-    }
 }
 
 const drawPostFrames = (state) => {

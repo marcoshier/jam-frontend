@@ -98,3 +98,6 @@ export class Vector2 {
         return scaled.add(origin);
     }
 }
+
+
+export const screenOrigin = new Vector2(0, 0);

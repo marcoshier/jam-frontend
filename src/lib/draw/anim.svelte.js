@@ -1,8 +1,8 @@
 import gsap from 'gsap';
-import { repetitions } from '$lib/stores/frames';
+import { postFrames, projectFrames, repetitions } from '$lib/stores/frames';
 import { mod } from '$lib/math/number';
-
-export let cycleImagesTl;
+import { hoveredType, resetSelection } from '$lib/stores/ui';
+import { CustomEase } from 'gsap/all';
 
 export const animationState = $state({
     lop: 0.0,
@@ -13,33 +13,23 @@ export const animationState = $state({
     isTransitionComplete: false,
     loaderT: 1.0,
 
-    previewFramesZs: [],
-    currentIdx: 0,
-    imageT: 0.0
+    imageT: 0.0,
+    selectionT: 0.0
 });
 
-const cycleImageIdx = () => {
-    animationState.currentIdx = mod(animationState.currentIdx + 1, repetitions)
+export const fadeInSelected = () => {
+    gsap.to(animationState, {
+        selectionT: 1.0,
+        duration: 2.0,
+        ease: CustomEase.create("custom", "M0,0 C1.073,0 0.542,1 1,1 "),
+    })
 }
 
-export const cycleImages = () => {
-    cycleImagesTl
-    .to(animationState, {
-        imageT: 0.0,
-        duration: 0.5
-    })
-    .to(animationState, {
-        imageT: 1.0,
-        duration: 0.75,
-    })
-    .to(animationState, {
-        imageT: 1.0,
-        duration: 1.5,
-    })
-    .to(animationState, {
-        imageT: 0.0,
-        duration: 0.75,
-        onComplete: () => cycleImageIdx()
+export const fadeOutSelected = () => {
+    gsap.to(animationState, {
+        selectionT: 1.0,
+        duration: 1.0,
+        onComplete: resetSelection
     })
 }
 
@@ -63,11 +53,6 @@ export const fadeInRight = () => {
         lop: 0.0,
         duration: 1.0
     })
-}
-
-
-const fadeOutLoader = () => {
-    
 }
 
 export const fadeIn = () => {
@@ -102,7 +87,5 @@ export const fadeIn = () => {
 }
 
 export const InitAnim = () => {
-     cycleImagesTl = gsap.timeline({
-        repeat: -1
-    });
+
 }

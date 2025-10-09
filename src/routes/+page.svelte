@@ -3,7 +3,7 @@
     import { onMount } from 'svelte';
 	import { projects, projectsById } from '$lib/stores/projects.js';
 	import { posts } from '$lib/stores/posts.js';
-	import { InitAnim, animationState, cycleImages, fadeIn, fadeInLeft, fadeInRight } from '$lib/draw/anim.svelte.js';
+	import { InitAnim, animationState, fadeIn, fadeInLeft, fadeInRight } from '$lib/draw/anim.svelte.js';
 	import { InitUI, cleanupUI, hoveredId, hoveredType } from '$lib/stores/ui';
 	import { InitMedia, isComplete, progress } from '$lib/stores/media.js';
 	import { InitCanvas } from '$lib/draw/canvas.js';
@@ -31,7 +31,6 @@
 
     const start = () => {
         fadeIn();
-        cycleImages();
     }
     
     onMount(async () => {
