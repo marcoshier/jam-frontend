@@ -1,4 +1,4 @@
-import { Frame } from '$lib/components/Frame.svelte';
+import { Frame } from '$lib/frame/Frame.svelte';
 import { derived, get, writable } from 'svelte/store';
 
 export const repetitions = 3

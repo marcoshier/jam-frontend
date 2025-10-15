@@ -8,7 +8,7 @@
 	import { InitMedia, isComplete, progress } from '$lib/stores/media.js';
 	import { InitCanvas } from '$lib/draw/canvas.js';
 	import { InitFrames } from '$lib/stores/frames.js';
-    import { Frame } from '$lib/components/Frame.svelte';
+    import { Frame } from '$lib/frame/Frame.svelte.js';
 	import { draw } from '$lib/draw/draw.js';
 	import Loader from '$lib/components/Loader.svelte';
 	import { get } from 'svelte/store';
