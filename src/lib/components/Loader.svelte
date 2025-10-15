@@ -4,16 +4,14 @@
 	import gsap from "gsap";
 	import { get } from "svelte/store";
 	import Sections from "./Sections.svelte";
+	import TitleLeft from "./home/TitleLeft.svelte";
+	import TitleRight from "./home/TitleRight.svelte";
 </script>
 
 {#if !animationState.isTransitionComplete}
     <div class="loader-container" style:opacity="{animationState.loaderT}">
-        <Sections 
-        overrideProjectTitle={"JEROEN"} 
-        overridePostsTitle={"MEIJER"}
-        opacityLeft={animationState.loaderT * animationState.tlop}
-        opacityRight={animationState.loaderT * animationState.trop}
-        ></Sections>
+        <TitleLeft overrideProjectTitle={"JEROEN"} opacity = {animationState.loaderT * animationState.tlop}></TitleLeft>
+        <TitleRight overridePostTitle={"MEIJER"} opacity = {animationState.loaderT * animationState.trop}></TitleRight>
     </div>
 {/if}
 
@@ -29,10 +27,5 @@
         align-items: center;
         justify-content: center;
         z-index: 9999;
-    }
-
-    .loader-container p {
-        font-family: 'Inter';
-        font-size: 1rem;
     }
 </style>

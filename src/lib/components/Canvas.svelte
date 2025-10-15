@@ -1,0 +1,1 @@
+<canvas id="jam-app-cnv"></canvas>

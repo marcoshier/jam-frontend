@@ -1,45 +1,78 @@
 <script>
-	import { animationState } from "$lib/draw/anim.svelte";
-	import { postsById } from "$lib/stores/posts";
-	import { projectsById } from "$lib/stores/projects";
-	import { hoveredType, hoveredId } from "$lib/stores/ui";
 
-    const { 
-        overrideProjectTitle, 
-        overridePostsTitle,
-        opacityLeft,
-        opacityRight
-     } = $props();
+    import { page } from '$app/state';
+    import { animationState } from '$lib/draw/anim.svelte.js';
+	import { contentT } from '$lib/stores/transition';
+	import About from './About.svelte';
+	import AboutBio from './about/AboutBio.svelte';
+	import AboutPhoto from './about/AboutPhoto.svelte';
+	import PostGallery from './blog/PostGallery.svelte';
+	import PostText from './blog/PostText.svelte';
+	import TitleLeft from './home/TitleLeft.svelte';
+	import TitleRight from './home/TitleRight.svelte';
+	import ProjectGallery from './project/ProjectGallery.svelte';
+	import ProjectText from './project/ProjectText.svelte';
 
-    const postsTitle = $derived(
-        overridePostsTitle ?? (
-            $hoveredType == "b" 
-                ? $postsById.get($hoveredId)?.title 
-                : "POSTS"
-        )
-    )
+    export const routeComponents = {
+        '/': {
+            left: TitleLeft,
+            right: TitleRight
+        },
+        '/project/[id]': {
+            left: ProjectGallery,
+            right: ProjectText
+        },
+        '/blog/[id]': {
+            left: PostGallery,
+            right: PostText
+        },
+        '/about': {
+            left: AboutPhoto,
+            right: AboutBio
+        }
+    };
 
-    const projectTitle = $derived(
-        overrideProjectTitle ?? (
-            $hoveredType == "p" 
-                ? $projectsById.get($hoveredId)?.title 
-                : "PROJECTS"
-        )
-    )
+    export function getRouteComponents(pathname) {
+        
+        if (routeComponents[pathname]) {
+            return routeComponents[pathname];
+        }
+
+        for (const [pattern, components] of Object.entries(routeComponents)) {
+            const regex = new RegExp(
+                '^' + pattern.replace(/\[.*?\]/g, '[^/]+') + '$'
+            );
+            if (regex.test(pathname)) {
+                return components;
+            }
+        }
+
+        return { left: null, right: null };
+    }
+
+    let components = $derived(getRouteComponents(page.url.pathname));
+    let { left, right } = $derived(components);
+    
 </script>
 
 <div id="section-container">
-    <section id="projects-view" class="view" style:opacity={opacityLeft}>
-        <h1>{projectTitle}</h1>
-    </section>
-
-    <section id="blog-view" class="view" style:opacity={opacityRight}>
-        <h1>{postsTitle}</h1>
-    </section>
+    <div id="left" class="view" style:opacity={(1.0 - animationState.loaderT) * $contentT}>
+        {#if components.left}
+            {@const LeftComponent = components.left}
+            <LeftComponent />
+        {/if}
+    </div>
+    
+    <div id="right" class="view" style:opacity={(1.0 - animationState.loaderT) * $contentT}>
+        {#if components.right}
+            {@const RightComponent = components.right}
+            <RightComponent />
+        {/if}
+    </div>
 </div>
 
-<style scoped>
-    #section-container {
+<style>
+     #section-container {
         position: absolute;
         top: 0;
         left: 0;
@@ -56,14 +89,5 @@
         width: 50%;
         height: 100%;
         align-content: center;
-    }
-
-    .view h1 {
-        width: 100%;
-        text-align: center;
-        font-family: 'Inter';
-        font-size: 1.85rem;
-        font-weight: 400;
-        color: black;
     }
 </style>

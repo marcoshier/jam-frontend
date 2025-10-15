@@ -6,11 +6,10 @@ import { goto } from '$app/navigation';
 gsap.registerPlugin(CustomEase);
 
 export const transitionPhase = writable('idle');
-export const selectionT = writable(0.0);
+export const contentT = writable(1.0);
 export const skipFadeIn = writable(false);
 
 const animationProxy = {
-    selectionT: 0.0,
     contentT: 1.0
 };
 
@@ -24,11 +23,11 @@ export const transitionTo = async (route, skipTransition = false) => {
     transitionPhase.set('fadeOut');
     
     await gsap.to(animationProxy, {
-        selectionT: 1.0,
+        contentT: 0.0,
         duration: 0.8,
         ease: CustomEase.create("custom", "M0,0 C1.073,0 0.542,1 1,1"),
         onUpdate: () => {
-            selectionT.set(animationProxy.selectionT);
+            contentT.set(animationProxy.contentT);
         }
     });
 
@@ -38,19 +37,13 @@ export const transitionTo = async (route, skipTransition = false) => {
     transitionPhase.set('fadeIn');
 };
 
-export const instantIn = () => {
-        animationProxy.selectionT = 1.0;
+export const fadeInContent = async () => {
+    if (get(skipFadeIn)) {
         animationProxy.contentT = 1.0;
-        selectionT.set(1.0);
+        contentT.set(1.0);
         transitionPhase.set('idle');
         skipFadeIn.set(false);
         return;
-}
-
-export const fadeInContent = async () => {
-    if (get(skipFadeIn)) {
-        instantIn()
-        return
     }
 
     await gsap.to(animationProxy, {

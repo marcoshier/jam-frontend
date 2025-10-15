@@ -3,6 +3,7 @@ import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes } from
 import { mod } from "$lib/math/number";
 import { Vector2 } from "$lib/math/vector2";
 import { animationState, fadeInSelected } from "$lib/draw/anim.svelte";
+import { transitionTo } from "./transition";
 
 export let scrollYprojects = writable(0);
 export let scrollYposts = writable(0);
@@ -65,7 +66,7 @@ export const handleMouseMove = (e) => {
     animationState.previewFramesZs = previewFrames.map((f) => f.z);
 }
 
-export const handleClick = (e) => {
+export const handleClick = async (e) => {
     const x = e.clientX;
     const y = e.clientY;
 
@@ -79,7 +80,11 @@ export const handleClick = (e) => {
             frame.selected = true;
             fadeInSelected();
 
-            break
+            const type = get(hoveredType) === "b" ? 'post' : 'project';
+            const route = `/${type}/${frame.id}`;
+
+            await transitionTo(route);
+            break;
         }
     }
 }
