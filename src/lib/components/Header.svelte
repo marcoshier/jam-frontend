@@ -1,4 +1,8 @@
-<header>
+<script>
+	import { animationState } from "$lib/draw/anim.svelte";
+</script>
+
+<header style:opacity={animationState.postFadeInT}>
     <div id="logo">JEROEN MEIJER</div>
     <div id="menu">
 

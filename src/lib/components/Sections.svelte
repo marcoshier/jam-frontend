@@ -32,8 +32,7 @@
         }
     };
 
-    export function getRouteComponents(pathname) {
-        
+    const getRouteComponents = (pathname) => {
         if (routeComponents[pathname]) {
             return routeComponents[pathname];
         }
@@ -56,14 +55,14 @@
 </script>
 
 <div id="section-container">
-    <div id="left" class="view" style:opacity={(1.0 - animationState.loaderT) * $contentT}>
+    <div id="left" class="view">
         {#if components.left}
             {@const LeftComponent = components.left}
             <LeftComponent />
         {/if}
     </div>
     
-    <div id="right" class="view" style:opacity={(1.0 - animationState.loaderT) * $contentT}>
+    <div id="right" class="view">
         {#if components.right}
             {@const RightComponent = components.right}
             <RightComponent />

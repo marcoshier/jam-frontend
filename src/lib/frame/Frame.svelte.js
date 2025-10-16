@@ -101,7 +101,11 @@ export class Frame {
         ctx.save();
 
         const pos = this.smoothPos;
-        const alpha = (this.type === "p" ? animationState.lop : animationState.rop) * (1.0 - animationState.loaderT);
+        let alpha = (this.type === "p" ? animationState.lop : animationState.rop) * animationState.loaderT;
+
+        if(!animationState.isFadeInComplete) {
+            alpha = 0;
+        }
 
         ctx.beginPath();
         ctx.rect(pos.x, pos.y, this.width, this.height);
@@ -123,17 +127,16 @@ export class Frame {
             
             if(images && images.length > 0) {
                 const image = images[0];
-                ctx.globalAlpha = alpha; // Set alpha before drawing image
+                ctx.globalAlpha = alpha;
                 imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
             } else {
-                // Fallback
-                ctx.globalAlpha = alpha; // Set alpha before drawing rect
+                ctx.globalAlpha = alpha;
                 ctx.fillStyle = '#ff0000';
                 ctx.fillRect(pos.x, pos.y, this.width, this.height);
             }
         }
 
-        ctx.globalAlpha = alpha; // Set alpha before drawing stroke
+        ctx.globalAlpha = alpha;
         ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
         ctx.lineWidth = 1;
         ctx.strokeRect(pos.x, pos.y, this.width, this.height);

@@ -38,6 +38,9 @@ export const handleScroll = (e) => {
 }
 
 export const handleMouseMove = (e) => {
+    if(!animationState.isFadeInComplete)
+        return
+
     const x = e.clientX;
     const y = e.clientY;
 

@@ -8,10 +8,10 @@
 	import TitleRight from "./home/TitleRight.svelte";
 </script>
 
-{#if !animationState.isTransitionComplete}
-    <div class="loader-container" style:opacity="{animationState.loaderT}">
-        <TitleLeft overrideProjectTitle={"JEROEN"} opacity = {animationState.loaderT * animationState.tlop}></TitleLeft>
-        <TitleRight overridePostTitle={"MEIJER"} opacity = {animationState.loaderT * animationState.trop}></TitleRight>
+{#if !animationState.isFadeInComplete}
+    <div class="loader-container" style:opacity="{1.0 - animationState.loaderT}">
+        <TitleLeft overrideProjectTitle={"JEROEN"} overrideOpacity = {animationState.nameTLeft}></TitleLeft>
+        <TitleRight overridePostTitle={"MEIJER"} overrideOpacity = {animationState.nameTRight}></TitleRight>
     </div>
 {/if}
 
