@@ -4,6 +4,7 @@ export async function load({ fetch }) {
     const apiUrl = PUBLIC_API_URL || 'http://localhost:3000';
     
     try {
+        console.log("fetching data")
         const projectsResponse = await fetch(`${apiUrl}/api/projects`);
         const projectsData = await projectsResponse.json();
 

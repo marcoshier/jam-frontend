@@ -69,6 +69,7 @@ const extractImagesByDocId = (docs) => {
 }
 
 export const InitMedia = async (data) => {
+    console.log("Initializing media loading...");
     const projectImagesByDocId = extractImagesByDocId(data.projects);
     await loadImages(projectImagesByDocId);
 }

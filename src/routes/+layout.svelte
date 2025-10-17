@@ -4,7 +4,7 @@
 	import { projects } from '$lib/stores/projects';
 	import { posts } from '$lib/stores/posts';
 	import { InitAnim, fadeInLeft, fadeInRight } from '$lib/draw/anim.svelte.js';
-	import { InitUI, cleanupUI, hoveredType } from '$lib/stores/ui';
+	import { InitUI, cleanupUI, hoveredType, selectedId } from '$lib/stores/ui';
 	import { InitMedia, isComplete } from '$lib/stores/media.js';
 	import { InitCanvas } from '$lib/draw/canvas.js';
 	import { InitFrames } from '$lib/stores/frames.js';
@@ -27,7 +27,13 @@
     
     onMount(async () => {
         projects.set(data.projects);
-        posts.set(data.posts)
+        posts.set(data.posts);
+
+		const currentId = page.params.id || page.params.projectId;
+		if(currentId) {
+			selectedId.set(currentId);
+		}
+
 
         InitCanvas();
         InitFrames(data);
@@ -48,9 +54,9 @@
 <div id="jam-app">
     <Canvas />
     <Sections />
-    <Header />
-    
     {@render children()}
+	
+    <Header />
 </div>
 
 <Loader />

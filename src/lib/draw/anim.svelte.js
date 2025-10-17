@@ -1,7 +1,7 @@
 import gsap from 'gsap';
 import { postFrames, projectFrames, repetitions } from '$lib/stores/frames';
 import { mod } from '$lib/math/number';
-import { hoveredType, resetSelection } from '$lib/stores/ui';
+import { hoveredType, resetSelection, selectedId } from '$lib/stores/ui';
 import { CustomEase } from 'gsap/all';
 import { isComplete, progress } from '$lib/stores/media';
 import { get } from 'svelte/store';
@@ -13,6 +13,7 @@ export const animationState = $state({
     isFadeInComplete: false,
     postFadeInT: 0.0,
 
+    headerT: 0.0,
     loaderT: 0.0,
     nameTLeft: 0.0,
     nameTRight: 0.0,
@@ -61,7 +62,7 @@ export const fadeInRight = () => {
 
 const fadeInContent = () => {
     gsap.to(animationState, {
-        loaderT: 1.0,
+        headerT: 1.0,
         duration: 0.65,
         delay: 0
     })
@@ -79,14 +80,29 @@ const fadeInContent = () => {
         duration: 0.5,
         onComplete: () => { animationState.isFadeInComplete = true }
     })
-    gsap.to(animationState, {
-        postFadeInT: 1.0,
-        duration: 0.65
-    })
+
+    if(get(selectedId) == -1) {     
+        
+        gsap.to(animationState, {
+            loaderT: 1.0,
+            duration: 0.65,
+            delay: 0
+        })
+
+        gsap.to(animationState, {
+            postFadeInT: 1.0,
+            duration: 0.65
+        })
+    }
+
 }
 
 const introCycle = () => {
-    console.log("cycling intro")
+
+    if(get(selectedId) != -1) {    
+        fadeInContent();
+        return;
+    }
 
     const tl = gsap.timeline({
         onComplete: () => {
@@ -97,6 +113,7 @@ const introCycle = () => {
             }
         }
     })
+
 
     tl.set(animationState, { nameTLeft: 1.0 })
     .to(animationState, { 

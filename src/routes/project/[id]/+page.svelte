@@ -2,13 +2,11 @@
 	import { fadeInContent } from '$lib/stores/transition.js';
     import { onMount } from 'svelte';
 
-    let { data } = $props();
-
     onMount(() => {
         fadeInContent();
     });
 </script>
 
-<svelte:head>
+<!-- <svelte:head>
     <title>{data.project?.title || 'Project'}</title>
-</svelte:head>
+</svelte:head> -->
