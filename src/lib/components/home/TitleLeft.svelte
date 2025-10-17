@@ -22,7 +22,7 @@
 <style>
     :global(.center-title) {
         text-align: center;
-        font-family: 'Inter';
+        font-family: 'Schflooze';
         font-size: 1.85rem;
         font-weight: 400;
         color: black;

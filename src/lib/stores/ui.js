@@ -1,12 +1,14 @@
 import { writable, get } from "svelte/store";
-import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes } from "./frames";
+import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes, projectFramesById } from "./frames";
 import { mod } from "$lib/math/number";
 import { Vector2 } from "$lib/math/vector2";
 import { animationState, fadeInSelected } from "$lib/draw/anim.svelte";
 import { transitionTo } from "./transition";
 
+export let scrollZprojects = writable(0);
+export let scrollZposts = writable(0);
 export let scrollYprojects = writable(0);
-export let scrollYposts = writable(0);
+export let scrollYpost = writable(0);
 
 export let mousePos = writable(new Vector2(0, 0));
 
@@ -16,25 +18,39 @@ export let hoveredType = writable("t");
 export let selectedId = writable(-1);
 
 export const handleScroll = (e) => {
-    const ht = get(hoveredType);
+    if(selectedId === - 1) {
+        const ht = get(hoveredType);
 
-    const t = e.deltaY * 0.001;
-    const rects = ht === "b" ? get(postFrames) : get(projectFrames);
-    const nRects = rects.length;
-    
-    if(ht === "p") {
-        scrollYprojects.update(n => mod(n + t, nRects)); 
-    } else {
-        scrollYposts.update(n => mod(n + t, nRects)); 
-    }
-    
-    for(let rect of rects) {
+        const t = e.deltaY * 0.001;
+        const rects = ht === "b" ? get(postFrames) : get(projectFrames);
+        const nRects = rects.length;
+        
         if(ht === "p") {
-            rect.scroll = get(scrollYprojects);
+            scrollZprojects.update(n => mod(n + t, nRects)); 
         } else {
-            rect.scroll = get(scrollYposts); 
+            scrollZposts.update(n => mod(n + t, nRects)); 
+        }
+        
+        for(let rect of rects) {
+            if(ht === "p") {
+                rect.scroll = get(scrollZprojects);
+            } else {
+                rect.scroll = get(scrollZposts); 
+            }
+        }
+    } else {
+        const frame = get(projectFramesById).get(get(selectedId));
+        if (frame) {
+
+            if(get(mousePos).x < window.innerWidth / 2.0) {
+                scrollYprojects.update(n => Math.max(0, n + e.deltaY));
+            }
+
+            frame.yOffset = Math.max(0, frame.yOffset + e.deltaY);
         }
     }
+
+    
 }
 
 export const handleMouseMove = (e) => {

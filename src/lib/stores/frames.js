@@ -1,5 +1,6 @@
 import { Frame } from '$lib/frame/Frame.svelte';
 import { derived, get, writable } from 'svelte/store';
+import { selectedId } from './ui';
 
 export const repetitions = 3
 
@@ -10,6 +11,13 @@ export const sortedProjectFrames = derived(
     return [...$projectFrames].sort((a, b) => a.zOffset - b.zOffset);
   }
 );
+export const projectFramesById = derived(
+  projectFrames,
+  ($projectFrames) => {
+    return new Map($projectFrames.map(frame => [frame.id, frame]));
+  }
+);
+
 
 export const postFrames = writable([]);
 export const sortedPostframes = derived(
@@ -26,6 +34,7 @@ const createFrames = (type, list) => {
     for (let i = 1; i < repetitions + 1; i++) {
         for (let pidx = 0; pidx < list.length; pidx++) {
             const project = list[pidx];
+            
             const f = new Frame(pidx, project.id, acc, type);
 
             frames.push(f);
@@ -33,7 +42,7 @@ const createFrames = (type, list) => {
         }
     }
 
-    return frames
+    return frames;
 }
 
 export const InitFrames = (data) => {

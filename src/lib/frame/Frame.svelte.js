@@ -1,3 +1,4 @@
+import { page } from "$app/state";
 import { animationState } from "$lib/draw/anim.svelte";
 import { imageFit } from "$lib/draw/image";
 import { map } from "$lib/math/map";
@@ -5,13 +6,13 @@ import { mix, mod } from "$lib/math/number";
 import { screenOrigin, Vector2 } from "$lib/math/vector2";
 import { postFrames, projectFrames } from "$lib/stores/frames";
 import { projectImages } from "$lib/stores/media";
-import { hoveredId, hoveredType, mousePos } from "$lib/stores/ui";
+import { hoveredId, hoveredType, mousePos, selectedId } from "$lib/stores/ui";
 import gsap from "gsap";
 import { get } from 'svelte/store';
 
 export class Frame {
     constructor(idx, id, z, type) {       
-        this.id = id; ``
+        this.id = id;
         this.idx = idx;
         this.pos = new Vector2(0, 0);
         this.smoothPos = new Vector2(0, 0); 
@@ -23,9 +24,18 @@ export class Frame {
         this.scroll = 0;
         this.hovered = false;
         this.selected = false;
+        this.instant = false;
+        this.init();
+        this.yOffset = 0;
     }
 
     center = $derived(this.smoothPos.plus(new Vector2(this.width / 2, this.height / 2)));
+
+    init() {
+        if(page.url.pathname.startsWith('/project/')) {
+            this.instant = true;
+        }
+    }
 
     contains(mouseX, mouseY) {
         const pos = this.smoothPos;
@@ -48,6 +58,19 @@ export class Frame {
     }
 
     update() {
+        if(this.instant) {
+            const pos = new Vector2(0, 0);
+            this.pos = pos;
+            this.smoothPos = pos;
+            this.width = window.innerWidth / 2;
+            this.height = window.innerHeight;
+            
+            const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
+            const nRects = rects.length;
+            this.zOffset = mod(this.z + this.scroll, nRects);
+            return;
+        }
+
         const oldZOffset = this.zOffset;
         this.calculateWidth();
         
@@ -97,50 +120,68 @@ export class Frame {
         this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
     }
 
+    drawImage(ctx, image, pos, alpha) {
+            ctx.globalAlpha = alpha;
+            imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
+    } 
+
     draw(ctx) {
         ctx.save();
 
-        const pos = this.smoothPos;
-        let alpha = (this.type === "p" ? animationState.lop : animationState.rop) * animationState.loaderT;
+        let instant = false;
+        let pos = new Vector2(0, 0);
+        let alpha = 0.0;
 
-        if(!animationState.isFadeInComplete) {
-            alpha = 0;
-        }
+        const images = get(projectImages).get(this.id); // TODO replace with cover image
 
-        ctx.beginPath();
-        ctx.rect(pos.x, pos.y, this.width, this.height);
+        if(this.instant) {
 
-        const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
-        const nextRect = rects.find(r => r.zOffset === this.zOffset + 1);
-        
-        if (nextRect) {
-            const nextPos = nextRect.smoothPos;
-            ctx.rect(nextPos.x, nextPos.y, nextRect.width, nextRect.height);
-            ctx.clip('evenodd'); 
-        }
-        
-        this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
-
-
-        if(this.hovered || !nextRect) {
-            const images = get(projectImages).get(this.id);
+            alpha = 1.0;
+            pos.y = Math.min(0, -this.yOffset); // TODO i dont like position being set in draw
             
-            if(images && images.length > 0) {
+            if(images && images.length > 0 && this.id === get(selectedId)) {
                 const image = images[0];
-                ctx.globalAlpha = alpha;
-                imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
-            } else {
-                ctx.globalAlpha = alpha;
-                ctx.fillStyle = '#ff0000';
-                ctx.fillRect(pos.x, pos.y, this.width, this.height);
+                this.drawImage(ctx, image, pos, alpha);
             }
+
+        } else {
+
+            pos = this.smoothPos;
+
+            if(animationState.isFadeInComplete) {
+                alpha = (this.type === "p" ? animationState.lop : animationState.rop) * animationState.loaderT;
+            } else {
+                alpha = 0.0;
+            }
+
+            ctx.beginPath();
+            ctx.rect(pos.x, pos.y, this.width, this.height);
+
+            const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
+            const nextRect = rects.find(r => r.zOffset === this.zOffset + 1);
+            
+            if (nextRect) {
+                const nextPos = nextRect.smoothPos;
+                ctx.rect(nextPos.x, nextPos.y, nextRect.width, nextRect.height);
+                ctx.clip('evenodd'); 
+            }
+            
+            this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
+
+            if(this.hovered || !nextRect) {
+                 if(images && images.length > 0) {
+                    const image = images[0];
+                    this.drawImage(ctx, image, pos, alpha);
+                 }
+            }
+
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(pos.x, pos.y, this.width, this.height);
+            
         }
 
-        ctx.globalAlpha = alpha;
-        ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(pos.x, pos.y, this.width, this.height);
-        
         ctx.restore();
 
 

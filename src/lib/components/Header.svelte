@@ -3,7 +3,7 @@
 </script>
 
 <header style:opacity={animationState.headerT}>
-    <div id="logo">JEROEN MEIJER</div>
+    <div id="logo">Jeroen Meijer</div>
     <div id="menu">
 
     </div>
@@ -28,17 +28,15 @@
     header #logo {
         padding: 0 30px;
         color: black;
-        font-family: 'Inter';
+        font-family: 'Schflooze';
         font-weight: 500;
         font-size: 17px;
-        letter-spacing: 4px;
-        text-transform: lowercase;
     }
 
     header #menu {
         padding: 0 20px;
         color: black;
-        font-family: 'Inter';
+        font-family: 'Schflooze';
         font-weight: 400;
         font-size: 15px;
     }

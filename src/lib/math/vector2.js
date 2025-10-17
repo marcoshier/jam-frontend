@@ -97,6 +97,10 @@ export class Vector2 {
         const scaled = translated.mul(amount);
         return scaled.add(origin);
     }
+
+    static zero() {
+       return new Vector2(0, 0);
+    }
 }
 
 

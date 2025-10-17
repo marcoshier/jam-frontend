@@ -1,14 +1,16 @@
 <script>
     import { projects, projectsById } from "$lib/stores/projects";
-    import { selectedId } from "$lib/stores/ui";
+    import { selectedId, scrollYprojects } from "$lib/stores/ui";
 	import { onMount } from "svelte";
     import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html';
 	import { get } from "svelte/store";
 	import SuggestionCard from "../suggestions/SuggestionCard.svelte";
+	import { sumOf } from "$lib/math/number";
 
     
     const currentProject = $derived($projectsById.get($selectedId));
 
+    let fullHeight = $state(0);
     let suggestions = $state([]);
 
 
@@ -45,42 +47,65 @@
         if ($selectedId && $projects.length > 0) {
             suggestions = getRandomProjects();
         }
+
+        if(window) {
+            if(currentProject) {
+
+                const imgHeight = (img) => {
+                    const ogheight = img.height;
+                    return (ogheight / img.width) * window.innerWidth;
+                }
+
+                const sum = sumOf(currentProject.otherImages, imgHeight);
+
+
+                fullHeight = window.innerHeight + sum;
+                console.log("ale", fullHeight)
+            } else {
+                fullHeight = window.innerHeight;
+            }
+        }
+       
     });
 
 </script>
 
 {#if currentProject}
-    <div class="project-text-container">
-        <div class="tags-container">
-            <h6>PROJECT</h6>
-            <h6>{currentProject.year}</h6>
-            <h6>INSTALLATION</h6>
-        </div>
-        <div class="title-container">
-            <h1>{currentProject.title}</h1>
-        </div>
-        <div class="subtitle-container">
-            <h2>{currentProject.subtitle}</h2>
-        </div>
-        <div class="description-container">
-            {@html description}
-        </div>
-        {#if collaborators != ""}
-            <div class="collaborators-container">
-                <h6>COLLABORATORS</h6>
-                <h4>{collaborators}</h4>
+    <div class="project-text-container" style:top={Math.max(0, -$scrollYprojects) + "px"}>
+        <div class="project-text-container-scroll" 
+        style:height={fullHeight + "px"}
+        >
+            <div class="tags-container">
+                <h6>PROJECT</h6>
+                <h6>{currentProject.year}</h6>
+                <h6>INSTALLATION</h6>
             </div>
-        {/if}
-        <div class="hardware-container">
-            <h6>HARDWARE</h6>
-            <h4>{hardware}</h4>
-        </div>
-        <div class="suggestion-container">
-            <h6>SUGGESTIONS</h6>
-            <div class="suggestions-scroll">
-                {#each suggestions as suggestion}
-                    <SuggestionCard {suggestion} />
-                {/each}
+            <div class="title-container">
+                <h1>{currentProject.title}</h1>
+            </div>
+            <div class="subtitle-container">
+                <h2>{currentProject.subtitle}</h2>
+            </div>
+            <div class="description-container">
+                {@html description}
+            </div>
+            {#if collaborators != ""}
+                <div class="collaborators-container">
+                    <h6>COLLABORATORS</h6>
+                    <h4>{collaborators}</h4>
+                </div>
+            {/if}
+            <div class="hardware-container">
+                <h6>HARDWARE</h6>
+                <h4>{hardware}</h4>
+            </div>
+            <div class="suggestion-container">
+                <h6>SUGGESTIONS</h6>
+                <div class="suggestions-scroll">
+                    {#each suggestions as suggestion}
+                        <SuggestionCard {suggestion} />
+                    {/each}
+                </div>
             </div>
         </div>
     </div>
@@ -89,12 +114,18 @@
 
 <style>
     .project-text-container {
+        position: relative;
         height: 100%;
         width: 100%;
-        padding: 60px;
-        font-family: 'Inter';
-        box-sizing: border-box;
         overflow-y: auto !important;
+    }
+
+    .project-text-container-scroll {
+        position: absolute;
+        width: 100%;
+        padding: 60px;
+        font-family: 'Schflooze';
+        box-sizing: border-box;
     }
 
     .project-text-container h6 {
@@ -114,7 +145,7 @@
 
     .subtitle-container h2 {
         color: black;
-        font-family: 'Inter';
+        font-family: 'Schflooze';
         margin-top: 0px;
         font-weight: 400;
         font-size: 21px;
@@ -158,7 +189,7 @@
         margin: 0.75rem 0;
         font-size: 23px;
         line-height: 1.6;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Schflooze', sans-serif;
     }
 
     .description-container :global(strong) {

@@ -12,7 +12,6 @@
     
     $effect(() => {
         const images = $projectImages.get(suggestion.id);
-        console.log(images);
 
         if (images && images.length > 0) {
             cover = images[0]?.src || null;
@@ -63,7 +62,7 @@
 
     .suggestion h4 {
         margin: 0 0 10px 0;
-        font-family: 'Inter';
+        font-family: 'Schflooze';
         transition: color 0.3s ease;
         position: relative;
         z-index: 1;
