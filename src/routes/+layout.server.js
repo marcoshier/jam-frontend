@@ -1,7 +1,7 @@
-import { PUBLIC_API_URL } from '$env/static/public';
+import { PUBLIC_PAYLOAD_URL } from '$env/static/public';
 
 export async function load({ fetch }) {
-    const apiUrl = PUBLIC_API_URL || 'http://localhost:3000';
+    const apiUrl = PUBLIC_PAYLOAD_URL || 'http://localhost:3000';
     
     try {
         console.log("fetching data")
