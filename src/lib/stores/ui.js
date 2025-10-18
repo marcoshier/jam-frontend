@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store";
-import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes, projectFramesById } from "./frames";
+import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes, projectFramesById, postFramesById } from "./frames";
 import { mod } from "$lib/math/number";
 import { Vector2 } from "$lib/math/vector2";
 import { animationState, fadeInSelected } from "$lib/draw/anim.svelte";
@@ -8,17 +8,19 @@ import { transitionTo } from "./transition";
 export let scrollZprojects = writable(0);
 export let scrollZposts = writable(0);
 export let scrollYprojects = writable(0);
-export let scrollYpost = writable(0);
+export let scrollYposts = writable(0);
 
 export let mousePos = writable(new Vector2(0, 0));
 
 export let hoveredId = writable(-1);
-export let hoveredType = writable("t");
+export let hoveredType = writable("");
 
 export let selectedId = writable(-1);
+export let selectedType = writable("")
 
 export const handleScroll = (e) => {
-    if(selectedId === - 1) {
+
+    if(get(selectedId) === -1) {
         const ht = get(hoveredType);
 
         const t = e.deltaY * 0.001;
@@ -39,11 +41,17 @@ export const handleScroll = (e) => {
             }
         }
     } else {
-        const frame = get(projectFramesById).get(get(selectedId));
-        if (frame) {
+        const type = get(selectedType);
+        const frames = type == "p" ? get(projectFramesById) : get(postFramesById)
+        const frame = frames.get(get(selectedId));
 
+        if (frame) {
             if(get(mousePos).x < window.innerWidth / 2.0) {
-                scrollYprojects.update(n => Math.max(0, n + e.deltaY));
+                if(type == "p") {
+                    scrollYprojects.update(n => Math.max(0, n + e.deltaY));
+                } else {
+                    scrollYposts.update(n => Math.max(0, n + e.deltaY));
+                }
             }
 
             frame.yOffset = Math.max(0, frame.yOffset + e.deltaY);
@@ -96,6 +104,7 @@ export const handleClick = async (e) => {
         if(frame.contains(x, y)) {
             hoveredId.set(frame.id)
             selectedId.set(frame.id);
+            selectedType.set(get(hoveredType))
             frame.selected = true;
             fadeInSelected();
 

@@ -1,13 +1,21 @@
+import gsap from "gsap";
+import { animationFrameId } from "./draw";
+
 export let canvas;
 export let ctx;
 export let contentScale = 1.25;
 
 export const sharpen = () => {
-    ctx.imageSmoothingEnabled = false;
-    canvas.width = window.innerWidth * contentScale;
-    canvas.height = window.innerHeight * contentScale;
+    const dpr = window.devicePixelRatio;
+    const rect = canvas.getBoundingClientRect();
 
-    ctx.scale(contentScale, contentScale);
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    ctx.scale(dpr, dpr);
+
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
 }
 
 export const withClip = (content, x, y, w, h) => {
@@ -19,9 +27,19 @@ export const withClip = (content, x, y, w, h) => {
     ctx.restore();
 }
 
+export const cleanupCanvas = () => {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+
+    if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
 export const InitCanvas = () => {
     canvas = document.getElementById('jam-app-cnv');
-    ctx = canvas.getContext('2d');
+    ctx = canvas.getContext('2d', { alpha: false });
     contentScale = window.devicePixelRatio || 1;
     
     sharpen();

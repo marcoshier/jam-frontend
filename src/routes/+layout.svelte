@@ -29,7 +29,7 @@
         projects.set(data.projects);
         posts.set(data.posts);
 
-        const currentId = page.params.id || page.params.projectId;
+        const currentId = page.params.id;
 
 		if(currentId) {
 			selectedId.set(currentId);
@@ -45,6 +45,7 @@
         await InitMedia(data);
 
         return () => {
+            cleanupCanvas();
             cleanupUI();
         }
     });

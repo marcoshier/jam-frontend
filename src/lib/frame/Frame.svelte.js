@@ -148,6 +148,10 @@ export class Frame {
 
             pos = this.smoothPos;
 
+            if(animationState.selectionT == 1.0) {
+                pos.y = Math.min(0, -this.yOffset);
+            }
+
             if(animationState.isFadeInComplete) {
                 alpha = (this.type === "p" ? animationState.lop : animationState.rop) * animationState.loaderT;
             } else {
