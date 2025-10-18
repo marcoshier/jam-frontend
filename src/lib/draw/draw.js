@@ -10,7 +10,7 @@ import { page } from "$app/state";
 const drawProjectFrames = (state) => {
     const frames = get(projectFrames);
 
-    if(frames && frames[0].instant == true) {
+    if(frames && frames[0] && frames[0].instant == true) {
 
         const selected = get(selectedId);
         const framesById = get(projectFramesById);
@@ -32,7 +32,7 @@ const drawProjectFrames = (state) => {
 const drawPostFrames = (state) => {
     const frames = get(postFrames);
 
-    if(frames && frames[0].instant == true) {
+    if(frames && frames[0] && frames[0].instant == true) {
         const selected = get(selectedId);
         const framesById = get(postFramesById);
         const frame = framesById.get(selected)
