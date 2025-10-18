@@ -1,9 +1,7 @@
 import { writable, get } from 'svelte/store';
 import { gsap } from 'gsap';
-import { CustomEase } from 'gsap/CustomEase';
 import { goto } from '$app/navigation';
 
-gsap.registerPlugin(CustomEase);
 
 export const transitionPhase = writable('idle');
 export const contentT = writable(1.0);
