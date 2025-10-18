@@ -23,7 +23,7 @@ export const transitionTo = async (route, skipTransition = false) => {
     await gsap.to(animationProxy, {
         contentT: 0.0,
         duration: 0.8,
-        ease: CustomEase.create("custom", "M0,0 C1.073,0 0.542,1 1,1"),
+        ease: "power2.inOut",
         onUpdate: () => {
             contentT.set(animationProxy.contentT);
         }

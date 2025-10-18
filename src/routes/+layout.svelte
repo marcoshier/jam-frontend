@@ -15,11 +15,6 @@
 	import Canvas from '$lib/components/Canvas.svelte';
     import '../app.css';
 	import gsap from 'gsap';
-	import CustomEase from 'gsap/CustomEase';
-
-    if (typeof window !== 'undefined') {
-        gsap.registerPlugin(CustomEase);
-    }
 
     let { children, data } = $props();
 

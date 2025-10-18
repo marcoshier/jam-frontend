@@ -2,7 +2,6 @@ import gsap from 'gsap';
 import { postFrames, projectFrames, repetitions } from '$lib/stores/frames';
 import { mod } from '$lib/math/number';
 import { hoveredType, resetSelection, selectedId } from '$lib/stores/ui';
-import { CustomEase } from 'gsap/all';
 import { isComplete, progress } from '$lib/stores/media';
 import { get } from 'svelte/store';
 
@@ -26,7 +25,7 @@ export const fadeInSelected = () => {
     gsap.to(animationState, {
         selectionT: 1.0,
         duration: 2.0,
-        ease: CustomEase.create("custom", "M0,0 C1.073,0 0.542,1 1,1 "),
+        ease: "power2.inOut" //CustomEase.create("custom", "M0,0 C1.073,0 0.542,1 1,1 "),
     })
 }
 
