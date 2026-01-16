@@ -64,6 +64,8 @@ export class Frame {
         this.width = mix(this.width, window.innerWidth / 2.0, animationState.selectionT);
     }
 
+    hoverMul = 0.0;
+
     update() {
 
         if(this.instant) {
@@ -126,11 +128,18 @@ export class Frame {
         }
 
         this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
+
+        if(this.hovered) {
+            this.hoverMul += 0.1;
+        } else {
+            this.hoverMul = 0.0;
+        }
+        this.hoverMul = Math.min(1.0, Math.max(0.0, this.hoverMul));
     }
 
     drawImage(ctx, image, pos, alpha) {
-            ctx.globalAlpha = alpha;
-            imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
+        ctx.globalAlpha = alpha * this.hoverMul;
+        imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
     } 
 
     draw(ctx) {
