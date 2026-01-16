@@ -136,16 +136,14 @@ export class Frame {
     draw(ctx) {
         ctx.save();
 
-        let instant = false;
         let pos = new Vector2(0, 0);
         let alpha = 0.0;
 
-        const images = get(projectImages).get(this.id); // TODO replace with cover image
+        const images = get(projectImages).get(this.id);
 
         if(this.instant) {
-
             alpha = 1.0;
-            pos.y = Math.min(0, -this.yOffset); // TODO i dont like position being set in draw
+            pos.y = Math.min(0, -this.yOffset);
             
             if(images && images.length > 0 && this.id === get(selectedId)) {
                 const image = images[0];
@@ -153,7 +151,6 @@ export class Frame {
             }
 
         } else {
-
             pos = this.smoothPos;
 
             if(animationState.selectionT == 1.0) {
@@ -166,40 +163,38 @@ export class Frame {
                 alpha = 0.0;
             }
 
-            ctx.beginPath();
-            ctx.rect(pos.x, pos.y, this.width, this.height);
-
             const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
             const nextRect = rects.find(r => r.zOffset === this.zOffset + 1);
             
-            if (nextRect) {
-                const nextPos = nextRect.smoothPos;
-                ctx.rect(nextPos.x, nextPos.y, nextRect.width, nextRect.height);
-                ctx.clip('evenodd'); 
-            }
-            
             this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
-
             const isLast = !nextRect;
-            const isScrolling = get(scrolling);
 
-            const shouldDrawImage = false; //isLast || (!isScrolling && this.hovered);
+            const shouldDrawImage = images && images.length > 0 && (isLast || this.hovered);
 
-            if(shouldDrawImage && images && images.length > 0) {
+            if(shouldDrawImage) {
+                if (this.hovered && nextRect) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.rect(pos.x, pos.y, this.width, this.height);
+                    const nextPos = nextRect.smoothPos;
+                    ctx.rect(nextPos.x, nextPos.y, nextRect.width, nextRect.height);
+                    ctx.clip('evenodd');
+                }
+                
                 const image = images[0];
                 this.drawImage(ctx, image, pos, alpha);
+                
+                if (this.hovered && nextRect) {
+                    ctx.restore();
+                }
             }
 
             ctx.globalAlpha = alpha;
             ctx.strokeStyle = this.id == 0 ? '#ff0000' : '#000000';
             ctx.lineWidth = 1;
             ctx.strokeRect(pos.x, pos.y, this.width, this.height);
-            
         }
 
         ctx.restore();
-
-
-
     }
 }

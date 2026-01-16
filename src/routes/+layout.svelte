@@ -6,7 +6,7 @@
 	import { InitAnim, fadeInLeft, fadeInRight } from '$lib/draw/anim.svelte.js';
 	import { InitUI, cleanupUI, hoveredType, selectedId } from '$lib/stores/ui';
 	import { InitMedia, isComplete } from '$lib/stores/media.js';
-	import { InitCanvas } from '$lib/draw/canvas.js';
+	import { cleanupCanvas, InitCanvas } from '$lib/draw/canvas.js';
 	import { InitFrames } from '$lib/stores/frames.js';
 	import { draw } from '$lib/draw/draw.js';
     import Sections from '$lib/components/Sections.svelte';
@@ -15,6 +15,7 @@
 	import Canvas from '$lib/components/Canvas.svelte';
     import '../app.css';
 	import gsap from 'gsap';
+	import FPSCounter from '$lib/components/debug/FPSCounter.svelte';
 
     let { children, data } = $props();
 
@@ -62,3 +63,4 @@
 </div>
 
 <Loader />
+<FPSCounter />
