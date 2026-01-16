@@ -3,7 +3,7 @@ import { animationState } from "./anim.svelte";
 import { canvas, ctx, withClip } from "./canvas";
 import { postFrames, postFramesById, projectFrames, projectFramesById, sortedProjectFrames } from '$lib/stores/frames';
 import { imageFit } from "./image";
-import { progress, projectImages } from "$lib/stores/media";
+import { progress, projectImages, smoothProgress } from "$lib/stores/media";
 import { hoveredId, hoveredType, selectedId } from "$lib/stores/ui";
 import { page } from "$app/state";
 
@@ -79,7 +79,7 @@ export const draw = () => {
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(window.innerWidth / 2, 0);
-    ctx.lineTo(window.innerWidth / 2, window.innerHeight * (get(progress) / 100.0));
+    ctx.lineTo(window.innerWidth / 2, window.innerHeight * (smoothProgress.current / 100.0));
     ctx.stroke();
 
 

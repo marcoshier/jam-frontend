@@ -1,9 +1,16 @@
 import { get, writable } from "svelte/store";
 import { PUBLIC_PAYLOAD_URL } from '$env/static/public';
+import { Tween } from 'svelte/motion';
+import { cubicOut } from 'svelte/easing';
+
 
 export let projectImages = writable(new Map())
 
 export let progress = writable(0);
+export let smoothProgress = new Tween(0, {
+		duration: 400,
+		easing: cubicOut
+	});
 export let isComplete = writable(false);
 
 export const loadImages = async (imagesByDocId) => {
@@ -23,13 +30,17 @@ export const loadImages = async (imagesByDocId) => {
 
                 img.onload = () => {
                     loaded++;
-                    progress.set((loaded / totalImages) * 100);
+                    const progressValue = (loaded / totalImages) * 100;
+                    progress.set(progressValue);
+                    smoothProgress.target = progressValue;
                     resolve({ success: true, img });
                 };
 
                 img.onerror = (event) => {
                     loaded++;
-                    progress.set((loaded / totalImages) * 100);
+                    const progressValue = (loaded / totalImages) * 100;
+                    progress.set(progressValue);
+                    smoothProgress.target = progressValue;
                     resolve({ success: false, img: null });
                 };
                 
