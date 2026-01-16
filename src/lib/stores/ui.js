@@ -16,9 +16,18 @@ export let hoveredId = writable(-1);
 export let hoveredType = writable("");
 
 export let selectedId = writable(-1);
-export let selectedType = writable("")
+export let selectedType = writable("");
+
+export const scrolling = writable(false);
+let scrollTimeout;
 
 export const handleScroll = (e) => {
+    scrolling.set(true);
+    
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        scrolling.set(false);
+    }, 150);
 
     if(get(selectedId) === -1) {
         const ht = get(hoveredType);
@@ -125,6 +134,7 @@ export const resetSelection = () => {
 }
 
 export const cleanupUI = () => {
+    clearTimeout(scrollTimeout);
     window.removeEventListener('wheel', handleScroll)
     window.removeEventListener('wheel', handleMouseMove);
     window.removeEventListener('mousemove', handleMouseMove)

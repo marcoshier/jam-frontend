@@ -6,7 +6,7 @@ import { mix, mod } from "$lib/math/number";
 import { screenOrigin, Vector2 } from "$lib/math/vector2";
 import { postFrames, projectFrames } from "$lib/stores/frames";
 import { projectImages } from "$lib/stores/media";
-import { hoveredId, hoveredType, mousePos, selectedId } from "$lib/stores/ui";
+import { hoveredId, hoveredType, mousePos, scrolling, selectedId } from "$lib/stores/ui";
 import gsap from "gsap";
 import { get } from 'svelte/store';
 
@@ -14,19 +14,26 @@ export class Frame {
     constructor(idx, id, z, type) {       
         this.id = id;
         this.idx = idx;
+
         this.pos = new Vector2(0, 0);
         this.smoothPos = new Vector2(0, 0); 
+
         this.width = 0;
         this.height = 0;
+
         this.z = z;
+        
         this.zOffset = $state(this.z);
+        this.yOffset = 0;
+
         this.type = type;
         this.scroll = 0;
+
         this.hovered = false;
         this.selected = false;
         this.instant = false;
+
         this.init();
-        this.yOffset = 0;
     }
 
     center = $derived(this.smoothPos.plus(new Vector2(this.width / 2, this.height / 2)));
@@ -58,6 +65,7 @@ export class Frame {
     }
 
     update() {
+
         if(this.instant) {
             const pos = new Vector2(0, 0);
             this.pos = pos;
@@ -172,11 +180,14 @@ export class Frame {
             
             this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
 
-            if(this.hovered || !nextRect) {
-                 if(images && images.length > 0) {
-                    const image = images[0];
-                    this.drawImage(ctx, image, pos, alpha);
-                 }
+            const isLast = !nextRect;
+            const isScrolling = get(scrolling);
+
+            const shouldDrawImage = false; //isLast || (!isScrolling && this.hovered);
+
+            if(shouldDrawImage && images && images.length > 0) {
+                const image = images[0];
+                this.drawImage(ctx, image, pos, alpha);
             }
 
             ctx.globalAlpha = alpha;
