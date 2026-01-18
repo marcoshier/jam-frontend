@@ -142,7 +142,7 @@ export class Frame {
         imageFit(ctx, image, pos.x, pos.y, this.width, this.height);
     } 
 
-    draw(ctx) {
+    draw(ctx, overrideAlpha = 0.0) {
         ctx.save();
 
         let pos = new Vector2(0, 0);
@@ -190,11 +190,18 @@ export class Frame {
                     ctx.clip('evenodd');
                 }
                 
-                const image = images[0];
+                const repetition = Math.floor(this.zOffset / 1);
+                const imageIdx = repetition % images.length;
+                
+                const image = images[imageIdx];
                 this.drawImage(ctx, image, pos, alpha);
                 
                 if (this.hovered && nextRect) {
                     ctx.restore();
+                }
+
+                if(overrideAlpha > 0.0) {
+                    this.drawImage(ctx, image, pos, overrideAlpha);
                 }
             }
 

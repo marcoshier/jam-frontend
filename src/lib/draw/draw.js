@@ -7,16 +7,15 @@ import { progress, projectImages, smoothProgress } from "$lib/stores/media";
 import { hoveredId, hoveredType, selectedId } from "$lib/stores/ui";
 import { page } from "$app/state";
 
-const drawProjectFrames = (state) => {
+const drawProjectFrames = (ctx) => {
     const frames = get(projectFrames);
 
     if(frames && frames[0] && frames[0].instant == true) {
-
         const selected = get(selectedId);
         const framesById = get(projectFramesById);
-        const frame = framesById.get(selected)
+        const frame = framesById.get(selected)[0]
         frame.update();
-        frame.draw(ctx, state);
+        frame.draw(ctx);
         return;
     }
 
@@ -25,19 +24,19 @@ const drawProjectFrames = (state) => {
     });
 
     frames.forEach(frame => {
-        frame.draw(ctx, state);
+        frame.draw(ctx);
     });
 }
 
-const drawPostFrames = (state) => {
+const drawPostFrames = (ctx) => {
     const frames = get(postFrames);
 
     if(frames && frames[0] && frames[0].instant == true) {
         const selected = get(selectedId);
         const framesById = get(postFramesById);
-        const frame = framesById.get(selected)
+        const frame = framesById.get(selected)[0]
         frame.update();
-        frame.draw(ctx, state);
+        frame.draw(ctx);
         return;
     }
 
@@ -46,8 +45,26 @@ const drawPostFrames = (state) => {
     });
 
     frames.forEach(frame => {
-        frame.draw(ctx, state);
+        frame.draw(ctx);
     });
+}
+
+const drawFrameCarousel = (ctx, type) => {
+    const framesById = type === "p" ? get(projectFramesById) : get(postFramesById);
+    const hovered = get(hoveredId);
+    if(hovered !== -1) {
+        const frames = framesById.get(hovered);
+        if(frames && frames.length > 0) {
+            for(let i = frames.length - 1; i >= 0; i--) {
+                const t = performance.now() * 0.00085;
+                const t0 = Math.cos(t + (i / frames.length) * Math.PI * 2);
+                const oa = t0 * 1.5 - 0.5;
+
+                frames[i].draw(ctx, Math.max(0, oa));
+            }
+        }
+
+    }
 }
 
 let frameCount = 0;
@@ -68,12 +85,20 @@ export const draw = () => {
 
     let projectId = null
 
+
     if(instantProjects || animationState.lop > 0.0) {
         withClip(drawProjectFrames, 0, 0, window.innerWidth / 2, window.innerHeight);
     }
+
+    drawFrameCarousel(ctx, "p");
+    
+
     if(instantPosts || animationState.rop > 0.0) {
         withClip(drawPostFrames, window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
     }
+    
+    drawFrameCarousel(ctx, "b");
+
 
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;

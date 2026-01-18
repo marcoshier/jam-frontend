@@ -46,6 +46,13 @@
 
         await InitMedia(data);
 
+        if (import.meta.hot) {
+            import.meta.hot.dispose(() => {
+                cleanupCanvas();
+                cleanupUI();
+            });
+        }
+
         return () => {
             cleanupCanvas();
             cleanupUI();

@@ -29,10 +29,20 @@ export const handleScroll = (e) => {
         scrolling.set(false);
     }, 150);
 
+     let delta = e.deltaY;
+    
+    if (e.deltaMode === 1) {
+        delta *= 40;
+    } else if (e.deltaMode === 2) {
+        delta *= 800;
+    }
+    
+    const scrollSpeed = 0.002;
+
     if(get(selectedId) === -1) {
         const ht = get(hoveredType);
 
-        const t = e.deltaY * 0.001;
+        const t = delta * scrollSpeed;
         const rects = ht === "b" ? get(postFrames) : get(projectFrames);
         const nRects = rects.length;
         

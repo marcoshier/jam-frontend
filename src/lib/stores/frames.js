@@ -1,7 +1,7 @@
 import { Frame } from '$lib/frame/Frame.svelte';
 import { derived, get, writable } from 'svelte/store';
 
-export const repetitions = 1
+export const repetitions = 2
 
 export const projectFrames = writable([]);
 export const sortedProjectFrames = derived(
@@ -10,10 +10,18 @@ export const sortedProjectFrames = derived(
     return [...$projectFrames].sort((a, b) => a.zOffset - b.zOffset);
   }
 );
+
 export const projectFramesById = derived(
   projectFrames,
   ($projectFrames) => {
-    return new Map($projectFrames.map(frame => [frame.id, frame]));
+    const map = new Map();
+    $projectFrames.forEach(frame => {
+      if (!map.has(frame.id)) {
+        map.set(frame.id, []);
+      }
+      map.get(frame.id).push(frame);
+    });
+    return map;
   }
 );
 
@@ -25,10 +33,18 @@ export const sortedPostframes = derived(
     return [...$postFrames].sort((a, b) => a.zOffset - b.zOffset);
   }
 );
+
 export const postFramesById = derived(
   postFrames,
   ($postFrames) => {
-    return new Map($postFrames.map(frame => [frame.id, frame]));
+    const map = new Map();
+    $postFrames.forEach(frame => {
+      if (!map.has(frame.id)) {
+        map.set(frame.id, []);
+      }
+      map.get(frame.id).push(frame);
+    });
+    return map;
   }
 );
 
