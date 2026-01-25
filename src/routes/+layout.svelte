@@ -3,12 +3,8 @@
     import { page } from '$app/state';
 	import { projects } from '$lib/stores/projects';
 	import { posts } from '$lib/stores/posts';
-	import { InitAnim, fadeInLeft, fadeInRight } from '$lib/draw/anim.svelte.js';
-	import { InitUI, cleanupUI, hoveredType, selectedId } from '$lib/stores/ui';
-	import { InitMedia, isComplete } from '$lib/stores/media.js';
-	import { cleanupCanvas, InitCanvas } from '$lib/draw/canvas.js';
-	import { InitFrames } from '$lib/stores/frames.js';
-	import { draw } from '$lib/draw/draw.js';
+	import { selectedId } from '$lib/stores/ui';
+    import { deviceSet, InitDevice } from '$lib/stores/device.js';
     import Sections from '$lib/components/Sections.svelte';
     import Header from '$lib/components/Header.svelte';
     import Loader from '$lib/components/Loader.svelte';
@@ -16,18 +12,13 @@
     import '../app.css';
 	import gsap from 'gsap';
 	import FPSCounter from '$lib/components/debug/FPSCounter.svelte';
+	import { InitMedia } from '$lib/stores/media';
 
     let { children, data } = $props();
-
-	$effect(() => {
-		if($isComplete && $hoveredType == "p") {
-			fadeInLeft()
-		} else {
-			fadeInRight()
-		}
-    })
     
     onMount(async () => {
+        console.log("Layout onMount - initializing stores with data");
+
         projects.set(data.projects);
         posts.set(data.posts);
 
@@ -37,36 +28,19 @@
 			selectedId.set(currentId);
 		}
 
-        InitCanvas();
-        InitFrames(data);
-        InitUI();
-        InitAnim();
-
-        draw();
-
-        await InitMedia(data);
-
-        if (import.meta.hot) {
-            import.meta.hot.dispose(() => {
-                cleanupCanvas();
-                cleanupUI();
-            });
-        }
-
-        return () => {
-            cleanupCanvas();
-            cleanupUI();
-        }
+        InitDevice();
     });
 </script>
 
 
 <div id="jam-app">
-    <Canvas />
-    <Sections />
-    {@render children()}
-	
-    <Header />
+    {#if $deviceSet}            
+        <Canvas data={data} />
+        <Sections />
+        {@render children()}
+        
+        <Header />
+    {/if}
 </div>
 
 <Loader />

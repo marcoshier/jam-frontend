@@ -4,7 +4,8 @@ import { imageFit } from "$lib/draw/image";
 import { map } from "$lib/math/map";
 import { mix, mod } from "$lib/math/number";
 import { screenOrigin, Vector2 } from "$lib/math/vector2";
-import { postFrames, projectFrames } from "$lib/stores/frames";
+import { isMobile } from "$lib/stores/device";
+import { mobileFrames, postFrames, projectFrames } from "$lib/stores/frames";
 import { projectImages } from "$lib/stores/media";
 import { hoveredId, hoveredType, mousePos, scrolling, selectedId } from "$lib/stores/ui";
 import gsap from "gsap";
@@ -53,15 +54,26 @@ export class Frame {
     }
     
     calculateWidth() {
-        const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
+        let rects = this.type === "b" ? get(postFrames) : get(projectFrames);
+
+        if(get(isMobile)) {
+            rects = get(mobileFrames);
+        }
+
         const nRects = rects.length;
         if (nRects === 0) return;
         
         this.zOffset = mod(this.z + this.scroll, nRects);
         
-        this.width = (window.innerWidth / 2) * Math.pow(0.9, this.zOffset);
-        this.width = Math.min(this.width, window.innerWidth / 2);
-        this.width = mix(this.width, window.innerWidth / 2.0, animationState.selectionT);
+        let widthRef = window.innerWidth / 2;
+
+        if(get(isMobile)) {
+            widthRef = window.innerWidth;
+        }
+
+        this.width = widthRef * Math.pow(0.9, this.zOffset);
+        this.width = Math.min(this.width, widthRef);
+        this.width = mix(this.width, widthRef, animationState.selectionT);
     }
 
     hoverMul = 0.0;
@@ -84,57 +96,94 @@ export class Frame {
         const oldZOffset = this.zOffset;
         this.calculateWidth();
         
-        const offset = (window.innerWidth / 2 - this.width) / 2;
+        let widthRef = window.innerWidth / 2;
+        let blogOffset = window.innerWidth / 2.0;
+
+        if(get(isMobile)) {
+            widthRef = window.innerWidth;
+            blogOffset = 0;
+        }
+
+        const offset = (widthRef - this.width) / 2;
         const height = window.innerHeight - (2 * offset);
 
-        const toff = this.type === "b" ? window.innerWidth / 2.0 : 0;
-
+        let toff = this.type === "b" ? blogOffset : 0;
         let newPos = this.pos;
 
-        if(get(hoveredType) === this.type) {
-            const mouse = get(mousePos);
-            const mouseX =  Math.max(toff, Math.min(mouse.x, toff + window.innerWidth / 2));
-            const mouseY = mouse.y;
+        if(get(isMobile)) {
+            newPos.x = window.innerWidth / 2 - this.width / 2;
+            newPos.y = window.innerHeight / 2 - height / 2;
 
-            const maxX = window.innerWidth / 2 - this.width;
-            const mPosX = map(mouseX, toff, window.innerWidth / 2 + toff, maxX + toff, toff, true);
+            this.pos = newPos;
+            this.pos = this.pos.mix(screenOrigin, animationState.selectionT);
+            
+            this.height = height;
+            this.height = mix(this.height, window.innerHeight, animationState.selectionT);
 
-            const maxY = window.innerHeight - height;
-            const mPosY = map(mouseY, 0, window.innerHeight, maxY, 0, true);
+            const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
+            const nRects = rects.length;
+            const zDiff = Math.abs(this.zOffset - oldZOffset);
 
-            newPos.x = mPosX
-            newPos.y = mPosY
+            if (this.smoothPos.x === 0 && this.smoothPos.y === 0) {
+                this.smoothPos = this.pos.copy();
+            } else if (zDiff > nRects / 2) {
+                this.smoothPos = this.pos.copy();
+            } else {
+                this.smoothPos = this.smoothPos.mix(this.pos, 0.1);
+            }
+
+            this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
+
         } else {
-            newPos.x = (this.type === "p" ? 0.0 : window.innerWidth / 2.0) + offset;
-            newPos.y = offset;
+            if(get(hoveredType) === this.type) {
+                const mouse = get(mousePos);
+                const mouseX =  Math.max(toff, Math.min(mouse.x, toff + window.innerWidth / 2));
+                const mouseY = mouse.y;
+
+                const maxX = window.innerWidth / 2 - this.width;
+                const mPosX = map(mouseX, toff, window.innerWidth / 2 + toff, maxX + toff, toff, true);
+
+                const maxY = window.innerHeight - height;
+                const mPosY = map(mouseY, 0, window.innerHeight, maxY, 0, true);
+
+                newPos.x = mPosX
+                newPos.y = mPosY
+            } else {
+                newPos.x = (this.type === "p" ? 0.0 : window.innerWidth / 2.0) + offset;
+                newPos.y = offset;
+            }
+
+            this.pos = newPos;
+            this.pos = this.pos.mix(screenOrigin, animationState.selectionT);
+
+            this.height = height;
+            this.height = mix(this.height, window.innerHeight, animationState.selectionT);
+
+            const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
+            const nRects = rects.length;
+            const zDiff = Math.abs(this.zOffset - oldZOffset);
+            
+            if (this.smoothPos.x === 0 && this.smoothPos.y === 0) {
+                this.smoothPos = this.pos.copy();
+            } else if (zDiff > nRects / 2) {
+                this.smoothPos = this.pos.copy();
+            } else {
+                this.smoothPos = this.smoothPos.mix(this.pos, 0.1);
+            }
+
+            this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
+
+            if(this.hovered) {
+                this.hoverMul += 0.1;
+            } else {
+                this.hoverMul = 0.0;
+            }
+            this.hoverMul = Math.min(1.0, Math.max(0.0, this.hoverMul));
+
+            
         }
 
-        this.pos = newPos;
-        this.pos = this.pos.mix(screenOrigin, animationState.selectionT);
-
-        this.height = height;
-        this.height = mix(this.height, window.innerHeight, animationState.selectionT);
-
-        const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
-        const nRects = rects.length;
-        const zDiff = Math.abs(this.zOffset - oldZOffset);
         
-        if (this.smoothPos.x === 0 && this.smoothPos.y === 0) {
-            this.smoothPos = this.pos.copy();
-        } else if (zDiff > nRects / 2) {
-            this.smoothPos = this.pos.copy();
-        } else {
-            this.smoothPos = this.smoothPos.mix(this.pos, 0.1);
-        }
-
-        this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
-
-        if(this.hovered) {
-            this.hoverMul += 0.1;
-        } else {
-            this.hoverMul = 0.0;
-        }
-        this.hoverMul = Math.min(1.0, Math.max(0.0, this.hoverMul));
     }
 
     drawImage(ctx, image, pos, alpha) {
@@ -143,6 +192,9 @@ export class Frame {
     } 
 
     draw(ctx, overrideAlpha = 0.0) {
+        
+              
+        
         ctx.save();
 
         let pos = new Vector2(0, 0);
@@ -166,7 +218,10 @@ export class Frame {
                 pos.y = Math.min(0, -this.yOffset);
             }
 
-            if(animationState.isFadeInComplete) {
+            
+            if(get(isMobile) && !this.instant) {
+                alpha = animationState.loaderT; 
+            } else if(animationState.isFadeInComplete) {
                 alpha = (this.type === "p" ? animationState.lop : animationState.rop) * animationState.loaderT;
             } else {
                 alpha = 0.0;

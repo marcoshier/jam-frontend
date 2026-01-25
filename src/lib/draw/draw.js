@@ -1,18 +1,46 @@
 import { get } from "svelte/store";
 import { animationState } from "./anim.svelte";
 import { canvas, ctx, withClip } from "./canvas";
-import { postFrames, postFramesById, projectFrames, projectFramesById, sortedProjectFrames } from '$lib/stores/frames';
+import { mobileFrames, postFrames, postFramesById, projectFrames, projectFramesById, sortedProjectFrames } from '$lib/stores/frames';
 import { imageFit } from "./image";
 import { progress, projectImages, smoothProgress } from "$lib/stores/media";
 import { hoveredId, hoveredType, selectedId } from "$lib/stores/ui";
 import { page } from "$app/state";
+import { isMobile } from "$lib/stores/device";
 
 const drawProjectFrames = (ctx) => {
     const frames = get(projectFrames);
 
-    if(frames && frames[0] && frames[0].instant == true) {
+    if(!get(isMobile) && frames && frames[0] && frames[0].instant == true) {
         const selected = get(selectedId);
         const framesById = get(projectFramesById);
+
+        const frame = framesById.get(selected)[0];
+        frame.update();
+        frame.draw(ctx);
+        return;
+    }
+
+    frames.forEach(frame => {
+        frame.hoverMul = 1;
+        frame.update();
+    });
+
+    frames.forEach(frame => {
+        frame.draw(ctx);
+    });
+
+    
+
+}
+
+const drawPostFrames = (ctx) => {
+    const frames = get(postFrames);
+
+    if(frames && frames[0] && frames[0].instant == true) {
+        const selected = get(selectedId);
+        const framesById = get(postFramesById);
+
         const frame = framesById.get(selected)[0]
         frame.update();
         frame.draw(ctx);
@@ -28,19 +56,10 @@ const drawProjectFrames = (ctx) => {
     });
 }
 
-const drawPostFrames = (ctx) => {
-    const frames = get(postFrames);
+const drawMobileFrames = (ctx) => {
+    const frames = get(mobileFrames);
 
-    if(frames && frames[0] && frames[0].instant == true) {
-        const selected = get(selectedId);
-        const framesById = get(postFramesById);
-        const frame = framesById.get(selected)[0]
-        frame.update();
-        frame.draw(ctx);
-        return;
-    }
-
-    frames.forEach(frame => {
+     frames.forEach(frame => {
         frame.update();
     });
 
@@ -85,28 +104,31 @@ export const draw = () => {
 
     let projectId = null
 
+    if(get(isMobile)) { 
 
-    if(instantProjects || animationState.lop > 0.0) {
-        withClip(drawProjectFrames, 0, 0, window.innerWidth / 2, window.innerHeight);
+        drawMobileFrames(ctx);
+    } else {
+
+        if(instantProjects || animationState.lop > 0.0) {
+            withClip(drawProjectFrames, 0, 0, window.innerWidth / 2, window.innerHeight);
+            drawFrameCarousel(ctx, "p");
+        }
+        
+
+        if(instantPosts || animationState.rop > 0.0) {
+            withClip(drawPostFrames, window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight); 
+            drawFrameCarousel(ctx, "b");
+        }
+
+
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(window.innerWidth / 2, 0);
+        ctx.lineTo(window.innerWidth / 2, window.innerHeight * (smoothProgress.current / 100.0));
+        ctx.stroke();
+
     }
-
-    drawFrameCarousel(ctx, "p");
-    
-
-    if(instantPosts || animationState.rop > 0.0) {
-        withClip(drawPostFrames, window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
-    }
-    
-    drawFrameCarousel(ctx, "b");
-
-
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(window.innerWidth / 2, 0);
-    ctx.lineTo(window.innerWidth / 2, window.innerHeight * (smoothProgress.current / 100.0));
-    ctx.stroke();
-
 
     animationFrameId = requestAnimationFrame(draw);
 }

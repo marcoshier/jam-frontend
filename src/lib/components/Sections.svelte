@@ -3,6 +3,7 @@
     import { page } from '$app/state';
     import { animationState } from '$lib/draw/anim.svelte.js';
 	import { contentT } from '$lib/stores/transition';
+	import { get } from 'svelte/store';
 	import About from './About.svelte';
 	import AboutBio from './about/AboutBio.svelte';
 	import AboutPhoto from './about/AboutPhoto.svelte';
@@ -12,6 +13,8 @@
 	import TitleRight from './home/TitleRight.svelte';
 	import ProjectGallery from './project/ProjectGallery.svelte';
 	import ProjectText from './project/ProjectText.svelte';
+	import { isMobile } from '$lib/stores/device';
+	import TitleMobile from './home/TitleMobile.svelte';
 
     export const routeComponents = {
         '/': {
@@ -54,20 +57,29 @@
     
 </script>
 
+
+
 <div id="section-container">
-    <div id="left" class="view">
-        {#if components.left}
-            {@const LeftComponent = components.left}
-            <LeftComponent />
-        {/if}
-    </div>
-    
-    <div id="right" class="view">
-        {#if components.right}
-            {@const RightComponent = components.right}
-            <RightComponent />
-        {/if}
-    </div>
+    {#if $isMobile}
+        <div id="full" class="view">
+            <!--ContnetMobile-->
+            <TitleMobile></TitleMobile>
+        </div>
+    {:else}
+        <div id="left" class="view">
+            {#if components.left}
+                {@const LeftComponent = components.left}
+                <LeftComponent />
+            {/if}
+        </div>
+        
+        <div id="right" class="view">
+            {#if components.right}
+                {@const RightComponent = components.right}
+                <RightComponent />
+            {/if}
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -84,8 +96,15 @@
         align-content: center;
     }
 
-    .view {
+    #left, #right {
         width: 50%;
+    }
+
+    #full {
+        width: 100%;
+    }
+
+    .view {
         height: 100%;
         align-content: center;
     }

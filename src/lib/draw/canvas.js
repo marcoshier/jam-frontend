@@ -18,13 +18,15 @@ export const sharpen = () => {
     canvas.style.height = `${rect.height}px`;
 }
 
-export const withClip = (content, x, y, w, h) => {
+export const withClip = (content, { x, y, w, h }) => {
+    
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y, w, h);
-    ctx.clip();
+  //  ctx.beginPath();
+  //  ctx.rect(x, y, w, h);
+  //  ctx.clip();
     content(ctx);
     ctx.restore();
+    
 }
 
 export const cleanupCanvas = () => {
