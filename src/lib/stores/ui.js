@@ -1,14 +1,20 @@
-import { writable, get } from "svelte/store";
-import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes, projectFramesById, postFramesById } from "./frames";
+import { writable, get, readable } from "svelte/store";
+import { projectFrames, sortedProjectFrames, postFrames, sortedPostframes, projectFramesById, postFramesById, mobileFrames } from "./frames";
 import { mod } from "$lib/math/number";
 import { Vector2 } from "$lib/math/vector2";
 import { animationState, fadeInSelected } from "$lib/draw/anim.svelte";
 import { transitionTo } from "./transition";
+import { isMobile } from "./device";
+import { haptic } from 'ios-haptics'
 
 export let scrollZprojects = writable(0);
 export let scrollZposts = writable(0);
+export let scrollZmobile = writable(0);
+
 export let scrollYprojects = writable(0);
 export let scrollYposts = writable(0);
+export let scrollYmobile = writable(0);
+export let scrollYmobileAcc = writable(0);
 
 export let mousePos = writable(new Vector2(0, 0));
 
@@ -19,6 +25,10 @@ export let selectedId = writable(-1);
 export let selectedType = writable("");
 
 export const scrolling = writable(false);
+export const touchStartY = writable(0);
+
+export const mobileItemHeight = readable(70);
+
 let scrollTimeout;
 
 export const handleScroll = (e) => {
@@ -37,7 +47,7 @@ export const handleScroll = (e) => {
         delta *= 800;
     }
     
-    const scrollSpeed = 0.002;
+    const scrollSpeed = 0.0001;
 
     if(get(selectedId) === -1) {
         const ht = get(hoveredType);
@@ -136,6 +146,86 @@ export const handleClick = async (e) => {
     }
 }
 
+export const handleTouchStart = (e) => {
+    e.preventDefault();
+    scrolling.set(true);
+    touchStartY.set(e.touches[0].clientY);
+    scrollYmobile.set(0);
+}
+
+export const handleTouchMove = (e) => {
+    e.preventDefault();
+    if (!get(scrolling)) return;
+
+    mousePos.set(new Vector2(window.innerWidth / 2.0, window.innerHeight / 2.0))
+
+
+    const mih = get(mobileItemHeight);
+
+    const items = get(mobileFrames);
+    const nRects = items.length;
+    
+    const touchY = e.touches[0].clientY;
+    const delta = touchY - get(touchStartY);
+
+    scrollYmobile.set(delta);
+
+    const totalScroll = get(scrollYmobileAcc) + delta;
+    const scrollInItems = -totalScroll / mih;
+    const newHoveredId = Math.round(scrollInItems);
+    
+    if (newHoveredId !== get(hoveredId)) {
+        hoveredId.set(newHoveredId);
+        
+        haptic();
+    }
+
+    const currentZ = get(scrollZmobile);
+    const smoothed = currentZ + (newHoveredId - currentZ) * 0.1;
+    scrollZmobile.set(smoothed);
+
+    for (let item of items) {   
+        item.scroll = get(scrollZmobile);
+    }
+
+}
+
+export const handleTouchEnd = (e) => {
+    e.preventDefault();
+    scrolling.set(false);
+    
+    const finalScroll = get(scrollYmobileAcc) + get(scrollYmobile);
+    scrollYmobileAcc.set(finalScroll);
+    scrollYmobile.set(0);
+    
+    const mih = get(mobileItemHeight);
+    const scrollInItems = -finalScroll / mih;
+    const nearestItem = Math.round(scrollInItems);
+    const targetScroll = -nearestItem * mih;
+    
+    animateScrollToTarget(finalScroll, targetScroll);
+}
+
+function animateScrollToTarget(from, to) {
+    const duration = 300; // ms
+    const startTime = Date.now();
+    
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        
+        const current = from + (to - from) * eased;
+        scrollYmobileAcc.set(current);
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    }
+    
+    requestAnimationFrame(animate);
+}
+
 export const resetSelection = () => {
     const frames =  get(hoveredType) ? get(projectFrames) : get(postFrames);
     for(let frame of frames) {
@@ -144,20 +234,37 @@ export const resetSelection = () => {
 }
 
 export const cleanupUI = () => {
-    clearTimeout(scrollTimeout);
-    window.removeEventListener('wheel', handleScroll)
-    window.removeEventListener('wheel', handleMouseMove);
-    window.removeEventListener('mousemove', handleMouseMove)
-    window.removeEventListener('click', handleClick);
+    if(get(isMobile)) {
+        window.removeEventListener('touchmove', handleTouchMove)
+       // window.removeEventListener('click', handleClick)
+    } else {
+        clearTimeout(scrollTimeout);
+        window.removeEventListener('wheel', handleScroll)
+        window.removeEventListener('wheel', handleMouseMove);
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('click', handleClick);
+    }
 }
 
 export const setupListeners = () => {
-    window.addEventListener('wheel', handleScroll);
-    window.addEventListener('wheel', handleMouseMove);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('click', handleClick);
+    if(get(isMobile)) {
+        window.addEventListener('touchstart', handleTouchStart);
+        window.addEventListener('touchmove', handleTouchMove);
+        window.addEventListener('touchend', handleTouchEnd);
+       // window.addEventListener('click', handleClick)
+    } else {
+        window.addEventListener('wheel', handleScroll);
+        window.addEventListener('wheel', handleMouseMove);
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('click', handleClick);
+    }
 }
 
 export const InitUI = () => {
+
+    const mih = get(mobileItemHeight);
+    const scrollInItems = -get(scrollYmobileAcc) / mih;
+    hoveredId.set(Math.round(scrollInItems));
+
     setupListeners();
 }

@@ -1,101 +1,105 @@
 <script>
 	import { animationState } from '$lib/draw/anim.svelte';
+	import { mod } from '$lib/math/number';
 	import { mobileFrames } from '$lib/stores/frames';
-    import { haptic } from 'ios-haptics'
-
+	import { postsById } from '$lib/stores/posts';
+	import { projectsById } from '$lib/stores/projects';
+	import { scrolling, hoveredId, mobileItemHeight, scrollYmobile, scrollYmobileAcc, scrollZmobile } from '$lib/stores/ui';
+	import { get } from 'svelte/store';
 
     const { overridePostTitle, overrideOpacity } = $props();
 
-    let items = $state([
-        'Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5',
-        'Item 6', 'Item 7', 'Item 8', 'Item 9', 'Item 10'
-    ]);
+    const titles = $derived.by(() => {
+        return $mobileFrames.map(frame => $projectsById.get(frame.id)?.title || $postsById.get(frame.id)?.title || "Untitled");
+    });
     
-    let selectedIndex = $state(0);
-    let isDragging = false;
-    let startY = 0;
-    let currentY = $state(0);
-    
-    const itemHeight = 70;
-    const visibleRange = 5;
-    
+    const nVisible = 5;
+    const snapThreshold = 0.15;
+
+    let snapStartTime = $state(0);
+    let snapDuration = 1000;
+
+    $effect(() => {
+        if (!$scrolling) {
+            snapStartTime = performance.now();
+        }
+    });
+
+    const elapsed = performance.now() - snapStartTime;
+    const progress = Math.min(1, elapsed / snapDuration);
+    const eased = 1 - Math.pow(1 - progress, 3);
+        
     const displayItems = $derived.by(() => {
         const result = [];
+        const mih = $mobileItemHeight;
         
-        for (let offset = -visibleRange; offset <= visibleRange; offset++) {
-            const index = (selectedIndex + offset + items.length) % items.length;
-            const distance = Math.abs(offset);
+        const totalScroll = $scrollYmobileAcc + $scrollYmobile;
+        const scrollInItems = -totalScroll / mih;
+        const centerItemFloat = scrollInItems;
+
+        const nearestSnapPoint = Math.round(centerItemFloat);
+        const distanceToSnap = nearestSnapPoint - centerItemFloat;
+        const absDistance = Math.abs(distanceToSnap);
+
+        let snapOffset = 0;
+        if (absDistance < snapThreshold) {
+            if ($scrolling) {
+                snapOffset = distanceToSnap;
+            } else {
+                // Reference snapStartTime to make it reactive
+                const elapsed = performance.now() - snapStartTime;
+                const progress = Math.min(1, elapsed / snapDuration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                snapOffset = distanceToSnap * eased;
+                
+                // Trigger re-render until animation completes
+                if (progress < 1) {
+                    requestAnimationFrame(() => {
+                        snapStartTime = snapStartTime; // Force update
+                    });
+                }
+            }
+        }
+        
+        for (let offset = -nVisible; offset <= nVisible; offset++) {
+            // Position relative to the continuous scroll center
+            const itemPosition = $hoveredId + offset;
+            const visualOffset = itemPosition - centerItemFloat - snapOffset;
+            
+            const index = mod(itemPosition, titles.length);
+            const distance = Math.abs(visualOffset);
             
             result.push({
-                text: items[index],
+                text: titles[index],
                 index: index,
-                offset: offset,
+                key: `${index}-${offset}`,
+                offset: visualOffset,
                 scale: Math.max(0.5, 1 - distance * 0.15),
                 opacity: Math.max(0.3, 1 - distance * 0.2),
-                y: offset * itemHeight
+                y: visualOffset * mih
             });
         }
         
         return result;
     });
-    
-    function handleTouchStart(e) {
-        e.preventDefault();
-        isDragging = true;
-        startY = e.touches[0].clientY;
-        currentY = 0;
-        console.log('Touch start');
-    }
-    
-    function handleTouchMove(e) {
-        e.preventDefault();
-        if (!isDragging) return;
-        
-        const touchY = e.touches[0].clientY;
-        const delta = touchY - startY;
-        currentY = delta;
-        
-        const itemsMoved = Math.round(-delta / itemHeight);
-        const newIndex = (selectedIndex + itemsMoved + items.length) % items.length;
-        
-        console.log('Delta:', delta, 'ItemsMoved:', itemsMoved, 'Old:', selectedIndex, 'New:', newIndex);
-        
-        if (newIndex !== selectedIndex) {
-            selectedIndex = newIndex;
-            startY = touchY;
-            currentY = 0;
-            
-            haptic();
-        }
-    }
-    //  style:opacity={ overrideOpacity ?? animationState.loaderT * (1.0 - animationState.selectionT) }
-    function handleTouchEnd(e) {
-        e.preventDefault();
-        isDragging = false;
-        currentY = 0;
-    }
 </script>
 
 <div 
     class="scrubber-container"
-    ontouchstart={handleTouchStart}
-    ontouchmove={handleTouchMove}
-    ontouchend={handleTouchEnd}
     style:pointer-events={ overrideOpacity === 0 ? 'none' : 'all' }
-  
 >
-    <div class="scrubber-items" style="transform: translateY({currentY}px)">
-        {#each displayItems as item}
+    <div class="scrubber-items">
+        {#each displayItems as item (item.key)}
             <div 
                 class="scrubber-item"
-                class:center={item.offset === 0}
+                class:center={Math.abs(item.offset) < 0.1}
                 style="
                     transform: translateY({item.y}px) scale({item.scale});
                     opacity: {item.opacity};
                     font-size: {item.scale * 24}px;
                 "
             >
-                {$mobileFrames[0]?.id}
+                {item.text}
             </div>
         {/each}
     </div>
@@ -129,7 +133,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        transition: transform 0.1s ease-out;
     }
     
     .scrubber-item {
@@ -141,12 +144,19 @@
         white-space: nowrap;
         font-weight: 600;
         color: #000;
-        transition: all 0.2s ease;
         pointer-events: none;
+        will-change: transform, opacity;
     }
     
     .scrubber-item.center {
         font-weight: 700;
     }
 
+    .center-line {
+        position: absolute;
+        width: 80%;
+        height: 2px;
+        background: rgba(0, 0, 0, 0.1);
+        pointer-events: none;
+    }
 </style>

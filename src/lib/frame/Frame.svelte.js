@@ -109,31 +109,23 @@ export class Frame {
 
         let toff = this.type === "b" ? blogOffset : 0;
         let newPos = this.pos;
+        
+        let rects = this.type === "b" ? get(postFrames) : get(projectFrames);
 
         if(get(isMobile)) {
-            newPos.x = window.innerWidth / 2 - this.width / 2;
-            newPos.y = window.innerHeight / 2 - height / 2;
+              rects = get(mobileFrames);
 
-            this.pos = newPos;
-            this.pos = this.pos.mix(screenOrigin, animationState.selectionT);
-            
-            this.height = height;
-            this.height = mix(this.height, window.innerHeight, animationState.selectionT);
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                
+                newPos.x = centerX - (this.width / 2);
+                newPos.y = centerY - (height / 2);
 
-            const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
-            const nRects = rects.length;
-            const zDiff = Math.abs(this.zOffset - oldZOffset);
-
-            if (this.smoothPos.x === 0 && this.smoothPos.y === 0) {
+                this.pos = newPos;
+                
                 this.smoothPos = this.pos.copy();
-            } else if (zDiff > nRects / 2) {
-                this.smoothPos = this.pos.copy();
-            } else {
-                this.smoothPos = this.smoothPos.mix(this.pos, 0.1);
-            }
-
-            this.smoothPos.clamp(toff, 0, toff + window.innerWidth / 2.0, window.innerHeight);
-
+                
+                this.height = height;
         } else {
             if(get(hoveredType) === this.type) {
                 const mouse = get(mousePos);
@@ -159,7 +151,6 @@ export class Frame {
             this.height = height;
             this.height = mix(this.height, window.innerHeight, animationState.selectionT);
 
-            const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
             const nRects = rects.length;
             const zDiff = Math.abs(this.zOffset - oldZOffset);
             

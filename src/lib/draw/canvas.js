@@ -21,9 +21,9 @@ export const sharpen = () => {
 export const withClip = (content, { x, y, w, h }) => {
     
     ctx.save();
-  //  ctx.beginPath();
-  //  ctx.rect(x, y, w, h);
-  //  ctx.clip();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
     content(ctx);
     ctx.restore();
     

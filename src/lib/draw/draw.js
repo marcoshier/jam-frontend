@@ -106,17 +106,18 @@ export const draw = () => {
 
     if(get(isMobile)) { 
 
-        drawMobileFrames(ctx);
+        withClip(drawMobileFrames, {x: 0, y: 0, w: window.innerWidth, h: window.innerHeight});
+
     } else {
 
         if(instantProjects || animationState.lop > 0.0) {
-            withClip(drawProjectFrames, 0, 0, window.innerWidth / 2, window.innerHeight);
+            withClip(drawProjectFrames, {x: 0, y: 0, w: window.innerWidth / 2, h: window.innerHeight});
             drawFrameCarousel(ctx, "p");
         }
         
 
         if(instantPosts || animationState.rop > 0.0) {
-            withClip(drawPostFrames, window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight); 
+            withClip(drawPostFrames, {x: window.innerWidth / 2, y: 0, w: window.innerWidth / 2, h: window.innerHeight}); 
             drawFrameCarousel(ctx, "b");
         }
 
