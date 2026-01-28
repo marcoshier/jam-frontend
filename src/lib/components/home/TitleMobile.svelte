@@ -94,6 +94,7 @@
                 class="scrubber-item"
                 class:center={Math.abs(item.offset) < 0.1}
                 style="
+                    background: rgba(255, 255, 255, 0.7);
                     transform: translateY({item.y}px) scale({item.scale});
                     opacity: {item.opacity};
                     font-size: {item.scale * 24}px;
@@ -103,8 +104,6 @@
             </div>
         {/each}
     </div>
-    
-    <div class="center-line"></div>
 </div>
 
 <style>
@@ -140,6 +139,8 @@
         color: red;
         font-family: 'Schflooze';
         font-weight: 500;
+        border-radius: 20px;
+        padding: 2px 18px;
         font-size: 28px;
         white-space: nowrap;
         font-weight: 600;
@@ -152,11 +153,4 @@
         font-weight: 700;
     }
 
-    .center-line {
-        position: absolute;
-        width: 80%;
-        height: 2px;
-        background: rgba(0, 0, 0, 0.1);
-        pointer-events: none;
-    }
 </style>
