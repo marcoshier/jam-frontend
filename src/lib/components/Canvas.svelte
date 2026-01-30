@@ -18,12 +18,8 @@
     })
 
     onMount(async () => {
-        console.log("Canvas onMount - initializing canvas and stores with data");
-
         InitCanvas();
-        console.log("Canvas initialized");
         InitFrames(data);
-        console.log("Frames initialized");
         InitUI();
         InitAnim();
 

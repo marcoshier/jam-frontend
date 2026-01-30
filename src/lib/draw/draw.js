@@ -15,7 +15,10 @@ const drawProjectFrames = (ctx) => {
         const selected = get(selectedId);
         const framesById = get(projectFramesById);
 
-        const frame = framesById.get(selected)[0];
+        const frameArray = framesById.get(selected);
+        if (!frameArray || frameArray.length === 0) return;
+
+        const frame = frameArray[0];
         frame.update();
         frame.draw(ctx);
         return;
@@ -30,7 +33,28 @@ const drawProjectFrames = (ctx) => {
         frame.draw(ctx);
     });
 
+    const maxZOffset = Math.max(...frames.map(f => f.zOffset));
+    const lastFrame = frames.find(f => f.zOffset === maxZOffset);
     
+    if (lastFrame) {
+        const hid = get(hoveredId);
+        const ht = get(hoveredType);
+        
+        if (hid !== -1 && ht === "p") {
+            const images = get(projectImages).get(hid); // cover images
+            
+            if (images && images.length > 0) {
+                const image = images[0];
+                const pos = lastFrame.smoothPos;
+                const alpha = animationState.lop * animationState.loaderT;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                imageFit(ctx, image, pos.x, pos.y, lastFrame.width, lastFrame.height);
+                ctx.restore();
+            }
+        }
+    }
 
 }
 
@@ -41,7 +65,10 @@ const drawPostFrames = (ctx) => {
         const selected = get(selectedId);
         const framesById = get(postFramesById);
 
-        const frame = framesById.get(selected)[0]
+        const frameArray = framesById.get(selected);
+        if (!frameArray || frameArray.length === 0) return; // Add this check
+        
+        const frame = frameArray[0];
         frame.update();
         frame.draw(ctx);
         return;
@@ -90,6 +117,9 @@ let frameCount = 0;
 export let animationFrameId = null;
 
 export const draw = () => {
+    if(animationState.imageT == 1.0) {
+        return;
+    }
 
     frameCount++;
 
@@ -112,13 +142,19 @@ export const draw = () => {
 
         if(instantProjects || animationState.lop > 0.0) {
             withClip(drawProjectFrames, {x: 0, y: 0, w: window.innerWidth / 2, h: window.innerHeight});
-            drawFrameCarousel(ctx, "p");
+
+            if(get(selectedId) == -1) {
+                drawFrameCarousel(ctx, "p");
+            }
         }
         
 
         if(instantPosts || animationState.rop > 0.0) {
             withClip(drawPostFrames, {x: window.innerWidth / 2, y: 0, w: window.innerWidth / 2, h: window.innerHeight}); 
-            drawFrameCarousel(ctx, "b");
+
+            if(get(selectedId) == -1) {
+                drawFrameCarousel(ctx, "b");
+            }
         }
 
 

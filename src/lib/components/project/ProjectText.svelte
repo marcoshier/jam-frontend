@@ -1,6 +1,6 @@
 <script>
     import { projects, projectsById } from "$lib/stores/projects";
-    import { selectedId, scrollYprojects } from "$lib/stores/ui";
+    import { selectedId, scrollYprojects, maxScrollProjects, scrollYText, maxScrollText } from "$lib/stores/ui";
 	import { onMount } from "svelte";
     import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html';
 	import { get } from "svelte/store";
@@ -10,8 +10,9 @@
     
     const currentProject = $derived($projectsById.get($selectedId));
 
-    let fullHeight = $state(0);
     let suggestions = $state([]);
+    let containerRef;
+
 
 
     const description = $derived(
@@ -48,33 +49,26 @@
             suggestions = getRandomProjects();
         }
 
-        if(window) {
-            if(currentProject) {
-
-                const imgHeight = (img) => {
-                    const ogheight = img.height;
-                    return (ogheight / img.width) * window.innerWidth;
+        if(window && currentProject) {
+            setTimeout(() => {
+                if (containerRef) {
+                    const contentHeight = containerRef.scrollHeight;
+                    const maxScroll = Math.max(0, contentHeight - window.innerHeight);
+                    
+                    // Update the TEXT specific max scroll
+                    maxScrollText.set(maxScroll); 
                 }
-
-                const sum = sumOf(currentProject.otherImages, imgHeight);
-
-
-                fullHeight = window.innerHeight + sum;
-                console.log("ale", fullHeight)
-            } else {
-                fullHeight = window.innerHeight;
-            }
+            }, 100);
         }
-       
     });
-
 </script>
 
 {#if currentProject}
-    <div class="project-text-container" style:top={Math.max(0, -$scrollYprojects) + "px"}>
-        <div class="project-text-container-scroll" 
-        style:height={fullHeight + "px"}
-        >
+<div class="project-text-container">
+   <div class="project-text-container-scroll" 
+     bind:this={containerRef}
+     style:transform="translate3d(0, -{$scrollYText}px, 0)" 
+>
             <div class="tags-container">
                 <h6>PROJECT</h6>
                 <h6>{currentProject.year}</h6>
@@ -114,10 +108,11 @@
 
 <style>
     .project-text-container {
+        background: white;
         position: relative;
-        height: 100%;
+        height: 100vh; /* changed from min-height so it acts as a viewport */
         width: 100%;
-        overflow-y: auto !important;
+        overflow: hidden; /* Disable native scroll, let JS handle the movement */
     }
 
     .project-text-container-scroll {
@@ -128,10 +123,15 @@
         box-sizing: border-box;
     }
 
+    .tags-container h6 {
+        padding-bottom: 20px;
+        padding-right: 80px;
+    }
+
     .project-text-container h6 {
         color: grey;
         font-family: monospace;
-        font-size: 11px;
+        font-size: 16px;
         font-weight: 400;
         letter-spacing: 1px;
     }
@@ -188,7 +188,7 @@
     .description-container :global(p) {
         margin: 0.75rem 0;
         font-size: 23px;
-        line-height: 1.6;
+        line-height: 1.4;
         font-family: 'Schflooze', sans-serif;
     }
 
@@ -222,7 +222,7 @@
     .description-container :global(blockquote) {
         border-left: 2px solid #ddd;
         padding-left: 3rem;
-        margin: 9rem 0;
+        margin: 7rem 0 1.5rem 0;
         font-family: monospace;
         font-size: 3rem;
         color: #979797;
@@ -252,15 +252,17 @@
     }
 
     .collaborators-container {
-        margin-top: 100px;
+        margin-top: 80px;
     }
 
     .hardware-container {
         margin-top: 60px;
     }
 
-    .hardware-container h4 {
+    .collaborators-container h4, .hardware-container h4 {
         font-weight: 400;
+        font-size: 16px;
+        line-height: 1.45;
     }
 
     .suggestion-container {

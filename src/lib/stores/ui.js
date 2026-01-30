@@ -16,6 +16,12 @@ export let scrollYposts = writable(0);
 export let scrollYmobile = writable(0);
 export let scrollYmobileAcc = writable(0);
 
+export const scrollYText = writable(0); 
+export const maxScrollText = writable(0);
+
+export let maxScrollProjects = writable(Infinity);
+export let maxScrollPosts = writable(Infinity);
+
 export let mousePos = writable(new Vector2(0, 0));
 
 export let hoveredId = writable(-1);
@@ -42,7 +48,7 @@ export const handleScroll = (e) => {
         scrolling.set(false);
     }, 150);
 
-     let delta = e.deltaY;
+    let delta = e.deltaY;
     
     if (e.deltaMode === 1) {
         delta *= 40;
@@ -72,25 +78,32 @@ export const handleScroll = (e) => {
                 rect.scroll = get(scrollZposts); 
             }
         }
-    } else {
+    } 
+    
+    else {
         const type = get(selectedType);
+        
+        if (type == "p") {
+            if (get(mousePos).x < window.innerWidth / 2.0) {
+                const max = get(maxScrollProjects);
+                scrollYprojects.update(n => Math.max(0, Math.min(n + e.deltaY, max)));
+            } else {
+                const max = get(maxScrollText); 
+                scrollYText.update(n => Math.max(0, Math.min(n + e.deltaY, max)));
+            }
+        } 
+        else {
+            const max = get(maxScrollPosts);
+            scrollYposts.update(n => Math.max(0, Math.min(n + e.deltaY, max)));
+        }
+        
         const frames = type == "p" ? get(projectFramesById) : get(postFramesById)
         const frame = frames.get(get(selectedId));
 
         if (frame) {
-            if(get(mousePos).x < window.innerWidth / 2.0) {
-                if(type == "p") {
-                    scrollYprojects.update(n => Math.max(0, n + e.deltaY));
-                } else {
-                    scrollYposts.update(n => Math.max(0, n + e.deltaY));
-                }
-            }
-
             frame.yOffset = Math.max(0, frame.yOffset + e.deltaY);
         }
     }
-
-    
 }
 
 export const handleMouseMove = (e) => {

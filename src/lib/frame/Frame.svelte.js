@@ -183,9 +183,6 @@ export class Frame {
     } 
 
     draw(ctx, overrideAlpha = 0.0) {
-        
-              
-        
         ctx.save();
 
         let pos = new Vector2(0, 0);
@@ -214,15 +211,14 @@ export class Frame {
                 alpha = animationState.loaderT; 
             } else if(animationState.isFadeInComplete) {
                 alpha = (this.type === "p" ? animationState.lop : animationState.rop) * animationState.loaderT;
-            } else {
-                alpha = 0.0;
             }
 
             const rects = this.type === "b" ? get(postFrames) : get(projectFrames);
+            const maxZOffset = Math.max(...rects.map(r => r.zOffset));
             const nextRect = rects.find(r => r.zOffset === this.zOffset + 1);
-            
+
             this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
-            const isLast = !nextRect;
+            const isLast = this.zOffset === maxZOffset;
 
             const shouldDrawImage = images && images.length > 0 && (isLast || this.hovered);
 
@@ -244,10 +240,6 @@ export class Frame {
                 
                 if (this.hovered && nextRect) {
                     ctx.restore();
-                }
-
-                if(overrideAlpha > 0.0) {
-                    this.drawImage(ctx, image, pos, overrideAlpha);
                 }
             }
 

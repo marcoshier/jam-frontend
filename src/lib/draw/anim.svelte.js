@@ -17,8 +17,8 @@ export const animationState = $state({
     nameTLeft: 0.0,
     nameTRight: 0.0,
 
-    imageT: 0.0,
-    selectionT: 0.0
+    selectionT: 0.0,
+    imageT: 0.0
 });
 
 export const fadeInSelected = () => {
@@ -26,6 +26,11 @@ export const fadeInSelected = () => {
         selectionT: 1.0,
         duration: 2.0,
         ease: "power2.inOut" //CustomEase.create("custom", "M0,0 C1.073,0 0.542,1 1,1 "),
+    })
+    gsap.to(animationState, {
+        imageT: 1.0,
+        duration: 0.75,
+        delay: 2.0,
     })
 }
 
@@ -127,6 +132,21 @@ const introCycle = () => {
     }, "-=1")
     
     .to({}, { duration: 0.2 });
+}
+
+const cleanAnim = () => {
+    gsap.killTweensOf(animationState);
+
+    animationState.lop = 0.0;
+    animationState.rop = 0.0;
+    animationState.isFadeInComplete = false;
+    animationState.postFadeInT = 0.0;
+    animationState.headerT = 0.0;
+    animationState.loaderT = 0.0;
+    animationState.nameTLeft = 0.0;
+    animationState.nameTRight = 0.0;
+    animationState.selectionT = 0.0;
+    animationState.imageT = 0.0;    
 }
 
 export const InitAnim = () => {
