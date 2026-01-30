@@ -40,4 +40,19 @@
         font-weight: 400;
         font-size: 15px;
     }
+
+    @media only screen and (max-width: 600px) {
+        header {
+            height: 59px;
+        }
+
+        header #logo {
+            top: 0;
+            padding: 9px 21px;
+        }
+
+        header #menu {
+            padding: 0 15px;
+        }
+    }
 </style>

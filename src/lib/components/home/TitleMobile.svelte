@@ -1,10 +1,11 @@
 <script>
 	import { animationState } from '$lib/draw/anim.svelte';
+	import { Noise1D } from '$lib/math/noise';
 	import { mod } from '$lib/math/number';
 	import { mobileFrames } from '$lib/stores/frames';
 	import { postsById } from '$lib/stores/posts';
 	import { projectsById } from '$lib/stores/projects';
-	import { scrolling, hoveredId, mobileItemHeight, scrollYmobile, scrollYmobileAcc, scrollZmobile } from '$lib/stores/ui';
+	import { scrolling, hoveredId, mobileItemHeight, scrollYmobile, scrollYmobileAcc, scrollZmobile, noiseCharge } from '$lib/stores/ui';
 	import { get } from 'svelte/store';
 
     const { overridePostTitle, overrideOpacity } = $props();
@@ -12,17 +13,34 @@
     const titles = $derived.by(() => {
         return $mobileFrames.map(frame => $projectsById.get(frame.id)?.title || $postsById.get(frame.id)?.title || "Untitled");
     });
-    
-    const nVisible = 5;
+
+    const noise = new Noise1D();
+    noise.setAmplitude(0.5);
+    noise.setScale(0.25);
+
+    const nVisible = 3;
     const snapThreshold = 0.15;
 
     let snapStartTime = $state(0);
     let snapDuration = 1000;
+    let animTime = $state(0);
+
 
     $effect(() => {
         if (!$scrolling) {
             snapStartTime = performance.now();
         }
+    });
+
+
+    $effect(() => {
+        let rafId;
+        function tick() {
+            animTime = performance.now() * 0.001; // Convert to seconds
+            rafId = requestAnimationFrame(tick);
+        }
+        tick();
+        return () => cancelAnimationFrame(rafId);
     });
 
     const elapsed = performance.now() - snapStartTime;
@@ -74,6 +92,8 @@
                 index: index,
                 key: `${index}-${offset}`,
                 offset: visualOffset,
+                offsetX: 0, // noise.getVal(animTime + index * 0.5) * $noiseCharge //{(item.offsetX - 0.25) * 120}
+                type: get(mobileFrames)[index]?.type || "",
                 scale: Math.max(0.5, 1 - distance * 0.15),
                 opacity: Math.max(0.3, 1 - distance * 0.2),
                 y: visualOffset * mih
@@ -94,13 +114,21 @@
                 class="scrubber-item"
                 class:center={Math.abs(item.offset) < 0.1}
                 style="
-                    background: rgba(255, 255, 255, 0.7);
-                    transform: translateY({item.y}px) scale({item.scale});
-                    opacity: {item.opacity};
+                    background: rgba(255, 255, 255, {Math.pow(item.opacity, 2) * 0.9});
+                    transform: translateX(0px) translateY({item.y}px) scale({item.scale});
+                    opacity: {item.opacity * (overrideOpacity ?? animationState.loaderT)};
                     font-size: {item.scale * 24}px;
                 "
             >
                 {item.text}
+                <br />
+                <i>
+                    {#if item.type == "p"}
+                        Project
+                    {:else if item.type == "b"}
+                        POST
+                    {/if} 
+                </i>
             </div>
         {/each}
     </div>
@@ -147,6 +175,21 @@
         color: #000;
         pointer-events: none;
         will-change: transform, opacity;
+    }
+
+    .scrubber-item i {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.5em;
+        text-transform: uppercase;
+        font-style: normal;
+        font-family: monospace;
+        padding: 2px;
+        text-align: center;
+        color: black;
+        font-weight: 400;
+        mix-blend-mode: exclusion;
     }
     
     .scrubber-item.center {

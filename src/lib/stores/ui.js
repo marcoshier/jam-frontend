@@ -29,6 +29,9 @@ export const touchStartY = writable(0);
 
 export const mobileItemHeight = readable(70);
 
+export let noiseCharge = writable(0);
+let chargeDecayInterval = null;
+
 let scrollTimeout;
 
 export const handleScroll = (e) => {
@@ -188,6 +191,13 @@ export const handleTouchMove = (e) => {
         item.scroll = get(scrollZmobile);
     }
 
+     noiseCharge.update(c => Math.min(1, c + 0.15));
+    
+    if (chargeDecayInterval) {
+        clearInterval(chargeDecayInterval);
+        chargeDecayInterval = null;
+    }
+
 }
 
 export const handleTouchEnd = (e) => {
@@ -204,6 +214,17 @@ export const handleTouchEnd = (e) => {
     const targetScroll = -nearestItem * mih;
     
     animateScrollToTarget(finalScroll, targetScroll);
+
+    chargeDecayInterval = setInterval(() => {
+        noiseCharge.update(c => {
+            const newCharge = Math.max(0, c - 0.05);
+            if (newCharge === 0 && chargeDecayInterval) {
+                clearInterval(chargeDecayInterval);
+                chargeDecayInterval = null;
+            }
+            return newCharge;
+        });
+    }, 16);
 }
 
 function animateScrollToTarget(from, to) {
