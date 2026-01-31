@@ -13,6 +13,9 @@
 	import gsap from 'gsap';
 	import FPSCounter from '$lib/components/debug/FPSCounter.svelte';
 	import { InitMedia } from '$lib/stores/media';
+	import { afterNavigate } from '$app/navigation';
+	import { get } from 'svelte/store';
+	import { reset } from '$lib/draw/draw';
 
     let { children, data } = $props();
     
@@ -29,6 +32,10 @@
 		}
 
         InitDevice();
+    });
+
+    afterNavigate((navigation) => {
+        reset(navigation);
     });
 </script>
 

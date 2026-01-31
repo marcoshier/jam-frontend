@@ -9,7 +9,6 @@ export async function load({ fetch }) {
         const projectsData = await projectsResponse.json();
 
         const postsResponse = await fetch(`${apiUrl}/api/posts`);
-        
         const postsData = await postsResponse.json();
 
         return {

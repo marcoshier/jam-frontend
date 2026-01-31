@@ -11,6 +11,8 @@ import { hoveredId, hoveredType, mousePos, scrolling, selectedId } from "$lib/st
 import gsap from "gsap";
 import { get } from 'svelte/store';
 
+// IDEA FOR POSTS: A different kind of dithering algorithm / gradient / pattern for eveery post. generative
+
 export class Frame {
     constructor(idx, id, z, type) {       
         this.id = id;
@@ -220,10 +222,10 @@ export class Frame {
             this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
             const isLast = this.zOffset === maxZOffset;
 
-            const shouldDrawImage = images && images.length > 0 && (isLast || this.hovered);
-
-            if(shouldDrawImage) {
-                if (this.hovered && nextRect) {
+            // Handle posts (type "b") differently
+            if (this.type === "b" && this.hovered) {
+                // Apply clipping if there's a next rect
+                if (nextRect) {
                     ctx.save();
                     ctx.beginPath();
                     ctx.rect(pos.x, pos.y, this.width, this.height);
@@ -232,14 +234,37 @@ export class Frame {
                     ctx.clip('evenodd');
                 }
                 
-                const repetition = Math.floor(this.zOffset / 1);
-                const imageIdx = repetition % images.length;
+                // Fill with grey
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = '#CCCCCC';
+                ctx.fillRect(pos.x, pos.y, this.width, this.height);
                 
-                const image = images[imageIdx];
-                this.drawImage(ctx, image, pos, alpha);
-                
-                if (this.hovered && nextRect) {
+                if (nextRect) {
                     ctx.restore();
+                }
+            } else {
+                // Handle projects (type "p") - draw images
+                const shouldDrawImage = images && images.length > 0 && (isLast || this.hovered);
+
+                if(shouldDrawImage) {
+                    if (this.hovered && nextRect) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.rect(pos.x, pos.y, this.width, this.height);
+                        const nextPos = nextRect.smoothPos;
+                        ctx.rect(nextPos.x, nextPos.y, nextRect.width, nextRect.height);
+                        ctx.clip('evenodd');
+                    }
+                    
+                    const repetition = Math.floor(this.zOffset / 1);
+                    const imageIdx = repetition % images.length;
+                    
+                    const image = images[imageIdx];
+                    this.drawImage(ctx, image, pos, alpha);
+                    
+                    if (this.hovered && nextRect) {
+                        ctx.restore();
+                    }
                 }
             }
 

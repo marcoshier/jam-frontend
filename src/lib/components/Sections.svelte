@@ -25,9 +25,9 @@
             left: ProjectGallery,
             right: ProjectText
         },
-        '/blog/[id]': {
-            left: PostGallery,
-            right: PostText
+        '/post/[id]': {
+            left: PostText,
+            right: PostGallery
         },
         '/about': {
             left: AboutPhoto,

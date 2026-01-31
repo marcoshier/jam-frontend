@@ -7,6 +7,7 @@ import { progress, projectImages, smoothProgress } from "$lib/stores/media";
 import { hoveredId, hoveredType, selectedId } from "$lib/stores/ui";
 import { page } from "$app/state";
 import { isMobile } from "$lib/stores/device";
+import gsap from "gsap";
 
 const drawProjectFrames = (ctx) => {
     const frames = get(projectFrames);
@@ -168,4 +169,45 @@ export const draw = () => {
     }
 
     animationFrameId = requestAnimationFrame(draw);
+}
+
+export const reset = (navigation) => {
+    const wasOnProject = navigation.from?.url.pathname.startsWith('/project/');
+    const wasOnPost = navigation.from?.url.pathname.startsWith('/post/');
+    const isNowHome = navigation.to?.url.pathname === '/';
+    
+    if (navigation.type === 'popstate' && isNowHome && (wasOnProject || wasOnPost)) {
+        selectedId.set(-1);
+        
+        get(projectFrames).forEach(frame => frame.instant = false);
+        get(postFrames).forEach(frame => frame.instant = false);
+        get(mobileFrames).forEach(frame => frame.instant = false);
+        
+        gsap.to(animationState, {
+            selectionT: 0,
+            imageT: 0,
+            duration: 1.0,
+            ease: "power2.inOut"
+        });
+        
+        if (wasOnProject) {
+            gsap.to(animationState, {
+                lop: 1.0,
+                duration: 1.0
+            });
+        } else if (wasOnPost) {
+            gsap.to(animationState, {
+                rop: 1.0,
+                duration: 1.0
+            });
+        }
+        
+        animationState.loaderT = 1;
+        animationState.postFadeInT = 1;
+        animationState.isFadeInComplete = true;
+        
+        if (animationFrameId === null) {
+            draw();
+        }
+    }
 }

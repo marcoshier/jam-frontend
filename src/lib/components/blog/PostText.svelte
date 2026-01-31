@@ -10,14 +10,19 @@
     
     const currentPost = $derived($postsById.get($selectedId));
 
+    onMount(() => {
+        console.log(currentPost)
+        console.log("PostText mounted for post ID:", $selectedId);
+    });
+
     let fullHeight = $state(0);
     let suggestions = $state([]);
-
     const bodyText = $derived(
-        currentPost?.description 
-            ? convertLexicalToHTML({ data: currentPost.description })
-            : ""
+        currentPost?.bodyText
+            ? convertLexicalToHTML({ data: currentPost.bodyText })
+            : "no body text"
     );
+
 
     const getRandomProjects = () => {
         const otherProjects = $posts.filter(p => p.id !== $selectedId);
@@ -35,23 +40,23 @@
             suggestions = getRandomProjects();
         }
 
-        if(window) {
-            if(currentPost) {
+        // if(window) {
+        //     if(currentPost) {
 
-                const imgHeight = (img) => {
-                    const ogheight = img.height;
-                    return (ogheight / img.width) * window.innerWidth;
-                }
+        //         const imgHeight = (img) => {
+        //             const ogheight = img.height;
+        //             return (ogheight / img.width) * window.innerWidth;
+        //         }
 
-                const sum = sumOf(currentPost.otherImages, imgHeight);
+        //         const sum = sumOf(currentPost.otherImages, imgHeight);
 
 
-                fullHeight = window.innerHeight + sum;
-                console.log("ale", fullHeight)
-            } else {
-                fullHeight = window.innerHeight;
-            }
-        }
+        //         fullHeight = window.innerHeight + sum;
+        //         console.log("ale", fullHeight)
+        //     } else {
+        //         fullHeight = window.innerHeight;
+        //     }
+        // }
        
     });
 
@@ -74,17 +79,7 @@
                 <h2>{currentPost.subtitle}</h2>
             </div>
             <div class="description-container">
-                {@html description}
-            </div>
-            {#if collaborators != ""}
-                <div class="collaborators-container">
-                    <h6>COLLABORATORS</h6>
-                    <h4>{collaborators}</h4>
-                </div>
-            {/if}
-            <div class="hardware-container">
-                <h6>HARDWARE</h6>
-                <h4>{hardware}</h4>
+                {@html bodyText}
             </div>
             <div class="suggestion-container">
                 <h6>SUGGESTIONS</h6>
