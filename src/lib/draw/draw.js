@@ -118,57 +118,70 @@ let frameCount = 0;
 export let animationFrameId = null;
 
 export const draw = () => {
-    if(animationState.imageT == 1.0) {
-        return;
-    }
-
     frameCount++;
 
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'low';
+    if(animationState.imageT != 1.0) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'low';
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const instantProjects = page.url.pathname.startsWith('/project/');
-    const instantPosts = page.url.pathname.startsWith('/post/');
+        const instantProjects = page.url.pathname.startsWith('/project/');
+        const instantPosts = page.url.pathname.startsWith('/post/');
 
-    let projectId = null
-
-    if(get(isMobile)) { 
-
-        withClip(drawMobileFrames, {x: 0, y: 0, w: window.innerWidth, h: window.innerHeight});
-
-    } else {
-
-        if(instantProjects || animationState.lop > 0.0) {
-            withClip(drawProjectFrames, {x: 0, y: 0, w: window.innerWidth / 2, h: window.innerHeight});
-
-            if(get(selectedId) == -1) {
-                drawFrameCarousel(ctx, "p");
-            }
+        if (frameCount % 60 === 0) { // Log every 60 frames to avoid spam
+            console.log('Draw state:', {
+                imageT: animationState.imageT,
+                selectionT: animationState.selectionT,
+                lop: animationState.lop,
+                rop: animationState.rop,
+                instantProjects,
+                instantPosts,
+                pathname: page.url.pathname
+            });
         }
         
+        let projectId = null
 
-        if(instantPosts || animationState.rop > 0.0) {
-            withClip(drawPostFrames, {x: window.innerWidth / 2, y: 0, w: window.innerWidth / 2, h: window.innerHeight}); 
+        if(get(isMobile)) { 
 
-            if(get(selectedId) == -1) {
-                drawFrameCarousel(ctx, "b");
+            withClip(drawMobileFrames, {x: 0, y: 0, w: window.innerWidth, h: window.innerHeight});
+
+        } else {
+
+            if(instantProjects || animationState.lop > 0.0) {
+                withClip(drawProjectFrames, {x: 0, y: 0, w: window.innerWidth / 2, h: window.innerHeight});
+
+                if(get(selectedId) == -1) {
+                    drawFrameCarousel(ctx, "p");
+                }
             }
+            
+
+            if(instantPosts || animationState.rop > 0.0) {
+                withClip(drawPostFrames, {x: window.innerWidth / 2, y: 0, w: window.innerWidth / 2, h: window.innerHeight}); 
+
+                if(get(selectedId) == -1) {
+                    drawFrameCarousel(ctx, "b");
+                }
+            }
+
+
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(window.innerWidth / 2, 0);
+            ctx.lineTo(window.innerWidth / 2, window.innerHeight * (smoothProgress.current / 100.0));
+            ctx.stroke();
+
         }
-
-
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(window.innerWidth / 2, 0);
-        ctx.lineTo(window.innerWidth / 2, window.innerHeight * (smoothProgress.current / 100.0));
-        ctx.stroke();
-
     }
 
+    
     animationFrameId = requestAnimationFrame(draw);
+
+    
 }
 
 export const reset = (navigation) => {
@@ -177,25 +190,47 @@ export const reset = (navigation) => {
     const isNowHome = navigation.to?.url.pathname === '/';
     
     if (navigation.type === 'popstate' && isNowHome && (wasOnProject || wasOnPost)) {
+        
         selectedId.set(-1);
         
-        get(projectFrames).forEach(frame => frame.instant = false);
-        get(postFrames).forEach(frame => frame.instant = false);
-        get(mobileFrames).forEach(frame => frame.instant = false);
+        // Reset instant flag and force update
+        get(projectFrames).forEach(frame => {
+            frame.instant = false;
+            frame.update();
+        });
+        get(postFrames).forEach(frame => {
+            frame.instant = false;
+            frame.update();
+        });
+        get(mobileFrames).forEach(frame => {
+            frame.instant = false;
+            frame.update();
+        });
         
         gsap.to(animationState, {
             selectionT: 0,
             imageT: 0,
             duration: 1.0,
-            ease: "power2.inOut"
+            ease: "power2.inOut",
+            onUpdate: () => {
+                console.log('Animation update:', {
+                    selectionT: animationState.selectionT,
+                    imageT: animationState.imageT
+                });
+            },
+            onComplete: () => {
+                console.log('Animation complete');
+            }
         });
         
         if (wasOnProject) {
+            console.log('Animating lop to 1.0');
             gsap.to(animationState, {
                 lop: 1.0,
                 duration: 1.0
             });
         } else if (wasOnPost) {
+            console.log('Animating rop to 1.0');
             gsap.to(animationState, {
                 rop: 1.0,
                 duration: 1.0
@@ -206,8 +241,15 @@ export const reset = (navigation) => {
         animationState.postFadeInT = 1;
         animationState.isFadeInComplete = true;
         
-        if (animationFrameId === null) {
-            draw();
+        // Always restart draw loop
+        console.log('Restarting draw loop, current animationFrameId:', animationFrameId);
+        if (animationFrameId !== null) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
         }
+
+        draw();
+    } else {
+        console.log('Reset conditions not met');
     }
 }

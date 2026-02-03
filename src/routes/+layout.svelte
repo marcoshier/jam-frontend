@@ -35,6 +35,11 @@
     });
 
     afterNavigate((navigation) => {
+          console.log('afterNavigate called', {
+            type: navigation.type,
+            from: navigation.from?.url.pathname,
+            to: navigation.to?.url.pathname
+        });
         reset(navigation);
     });
 </script>

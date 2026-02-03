@@ -91,11 +91,11 @@ export const handleScroll = (e) => {
                 const max = get(maxScrollText); 
                 scrollYText.update(n => Math.max(0, Math.min(n + e.deltaY, max)));
             }
-        } 
-        else {
-            const max = get(maxScrollPosts);
-            scrollYposts.update(n => Math.max(0, Math.min(n + e.deltaY, max)));
+        } else {
+            const max = get(maxScrollText);
+            scrollYText.update(n => Math.max(0, Math.min(n + e.deltaY, max)));
         }
+
         
         const frames = type == "p" ? get(projectFramesById) : get(postFramesById)
         const frame = frames.get(get(selectedId));

@@ -14,7 +14,6 @@
     let containerRef;
 
 
-
     const description = $derived(
         currentProject?.description 
             ? convertLexicalToHTML({ data: currentProject.description })

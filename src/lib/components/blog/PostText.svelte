@@ -1,19 +1,14 @@
 <script>
-    import { selectedId, scrollYprojects } from "$lib/stores/ui";
 	import { onMount } from "svelte";
+    import { selectedId, scrollYprojects, maxScrollPosts, scrollYText, maxScrollText } from "$lib/stores/ui";
     import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html';
 	import { get } from "svelte/store";
 	import SuggestionCard from "../suggestions/SuggestionCard.svelte";
 	import { sumOf } from "$lib/math/number";
     import { posts, postsById }  from "$lib/stores/posts";
 
-    
+    let containerRef;
     const currentPost = $derived($postsById.get($selectedId));
-
-    onMount(() => {
-        console.log(currentPost)
-        console.log("PostText mounted for post ID:", $selectedId);
-    });
 
     let fullHeight = $state(0);
     let suggestions = $state([]);
@@ -40,43 +35,60 @@
             suggestions = getRandomProjects();
         }
 
-        // if(window) {
-        //     if(currentPost) {
-
-        //         const imgHeight = (img) => {
-        //             const ogheight = img.height;
-        //             return (ogheight / img.width) * window.innerWidth;
-        //         }
-
-        //         const sum = sumOf(currentPost.otherImages, imgHeight);
-
-
-        //         fullHeight = window.innerHeight + sum;
-        //         console.log("ale", fullHeight)
-        //     } else {
-        //         fullHeight = window.innerHeight;
-        //     }
-        // }
+         if(window && currentPost) {
+            setTimeout(() => {
+                if (containerRef) {
+                    const contentHeight = containerRef.scrollHeight;
+                    const maxScroll = Math.max(0, contentHeight - window.innerHeight);
+                    
+                    // Update the TEXT specific max scroll
+                    maxScrollText.set(maxScroll); 
+                }
+            }, 100);
+        }
        
     });
+
+    
+    function getDaySuffix(day) {
+        if (day > 3 && day < 21) return 'th';
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
+
+    function formatDate(isoDate) {
+        const date = new Date(isoDate);
+        
+        const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' });
+        const day = date.getDate();
+        const suffix = getDaySuffix(day);
+        const month = date.toLocaleDateString('en-GB', { month: 'long' });
+        const year = date.getFullYear();
+        
+        return `${weekday}, ${day}${suffix} ${month} ${year}`;
+    }
+
+    const createdAt = $derived(currentPost?.createdAt ? formatDate(currentPost.createdAt) : '');
+    const updatedAt = $derived(currentPost?.updatedAt ? formatDate(currentPost.updatedAt) : '');
 
 </script>
 
 {#if currentPost}
-    <div class="project-text-container" style:top={Math.max(0, -$scrollYprojects) + "px"}>
+    <div class="project-text-container">
         <div class="project-text-container-scroll" 
-        style:height={fullHeight + "px"}
+            bind:this={containerRef}
+            style:transform="translate3d(0, -{$scrollYText}px, 0)" 
         >
-            <div class="tags-container">
-                <h6>PROJECT</h6>
-                <h6>{currentPost.year}</h6>
-                <h6>INSTALLATION</h6>
-            </div>
+
             <div class="title-container">
                 <h1>{currentPost.title}</h1>
             </div>
-            <div class="subtitle-container">
-                <h2>{currentPost.subtitle}</h2>
+            <div class="tags-container">
+                <h6>{updatedAt}</h6>
             </div>
             <div class="description-container">
                 {@html bodyText}
@@ -95,11 +107,12 @@
 
 
 <style>
-    .project-text-container {
+   .project-text-container {
+        background: white;
         position: relative;
-        height: 100%;
+        height: 100vh; /* changed from min-height so it acts as a viewport */
         width: 100%;
-        overflow-y: auto !important;
+        overflow: hidden; /* Disable native scroll, let JS handle the movement */
     }
 
     .project-text-container-scroll {
@@ -110,10 +123,17 @@
         box-sizing: border-box;
     }
 
+    .tags-container h6 {
+        margin-top: 15px;
+        padding-bottom: 10px;
+        padding-right: 80px;
+    }
+
+
     .project-text-container h6 {
         color: grey;
         font-family: monospace;
-        font-size: 11px;
+        font-size: 16px;
         font-weight: 400;
         letter-spacing: 1px;
     }
@@ -123,6 +143,11 @@
         font-weight: 500;
         font-size: 44px;
         margin-top: 70px;
+    }
+
+    
+    .title-container h1 {
+        margin-bottom: 0;
     }
 
     .subtitle-container h2 {
@@ -135,18 +160,18 @@
 
     .tags-container {
         height: 100px;
-        margin-top: 40px;
-        height: 20px;
+        margin-top: 0;
         display: flex;
-        width: 50%;
+        width: 100%;
         display: flex;
         flex-direction: row;
         justify-content: space-between;
     }
 
     .description-container {
-        margin-top: 170px;
+        margin-top: 0;
     }
+
 
     .description-container :global(h1) {
         font-size: 2.5rem;
@@ -156,9 +181,11 @@
     }
 
     .description-container :global(h2) {
-        font-size: 2rem;
-        font-weight: 600;
-        margin: 1.25rem 0 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 400 !important;
+        margin-top: 90px;
+        margin-left: 2rem;
+        margin-bottom: 2rem;
     }
 
     .description-container :global(h3) {
@@ -167,11 +194,21 @@
         margin: 1rem 0 0.5rem;
     }
 
+    .description-container :global(p:first-child) {
+        margin-bottom: 120px;
+        font-size: 21px;
+        color: rgb(24, 24, 24);
+        line-height: 1.6;
+        width: 60%;
+    }
+
     .description-container :global(p) {
         margin: 0.75rem 0;
-        font-size: 23px;
-        line-height: 1.6;
+        font-size: 1.35rem;
+        line-height: 1.4;
+        margin-bottom: 60px;
         font-family: 'Schflooze', sans-serif;
+        text-rendering: optimizeLegibility;
     }
 
     .description-container :global(strong) {
@@ -204,7 +241,7 @@
     .description-container :global(blockquote) {
         border-left: 2px solid #ddd;
         padding-left: 3rem;
-        margin: 9rem 0;
+        margin: 7rem 0 1.5rem 0;
         font-family: monospace;
         font-size: 3rem;
         color: #979797;
@@ -234,20 +271,22 @@
     }
 
     .collaborators-container {
-        margin-top: 100px;
+        margin-top: 80px;
     }
 
     .hardware-container {
         margin-top: 60px;
     }
 
-    .hardware-container h4 {
+    .collaborators-container h4, .hardware-container h4 {
         font-weight: 400;
+        font-size: 16px;
+        line-height: 1.45;
     }
 
     .suggestion-container {
         margin-top: 100px;
-        padding-bottom: 80px;
+        margin-bottom: 280px;
     }
 
     .suggestions-scroll {
