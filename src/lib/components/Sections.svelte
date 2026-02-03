@@ -15,6 +15,9 @@
 	import ProjectText from './project/ProjectText.svelte';
 	import { isMobile } from '$lib/stores/device';
 	import TitleMobile from './home/TitleMobile.svelte';
+	import { selectedId } from '$lib/stores/ui';
+	import ProjectTextMobile from './project/ProjectTextMobile.svelte';
+	import ProjectGalleryMobile from './project/ProjectGalleryMobile.svelte';
 
     export const routeComponents = {
         '/': {
@@ -62,8 +65,14 @@
 <div id="section-container">
     {#if $isMobile}
         <div id="full" class="view">
-            <!--ContnetMobile-->
-            <TitleMobile></TitleMobile>
+            {#if $selectedId === -1}
+                <TitleMobile></TitleMobile>
+            {:else}
+                <div class="mobile-project-wrapper">
+                    <ProjectGalleryMobile></ProjectGalleryMobile>
+                    <ProjectTextMobile></ProjectTextMobile>
+                </div>
+            {/if}
         </div>
     {:else}
         <div id="left" class="view">
@@ -107,5 +116,14 @@
     .view {
         height: 100%;
         align-content: center;
+    }
+
+    .mobile-project-wrapper {
+        width: 100%;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
     }
 </style>

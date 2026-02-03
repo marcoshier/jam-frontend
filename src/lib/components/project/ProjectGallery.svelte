@@ -7,31 +7,11 @@
 	import { get } from "svelte/store";
 
 	const currentProject = $derived($projectsById.get($selectedId));
-	
-	let containerRef;
-	let scrollContainerRef;
-	let maxScroll = $state(0);
-
-	$effect(() => {
-		if (scrollContainerRef && containerRef) {
-			// Calculate max scroll: total content height - viewport height
-			const contentHeight = scrollContainerRef.scrollHeight;
-			const viewportHeight = containerRef.clientHeight;
-			maxScroll = Math.max(0, contentHeight - viewportHeight);
-		}
-	});
-
-	// Clamp scrollYprojects to maxScroll
-	$effect(() => {
-		if ($scrollYprojects > maxScroll) {
-			scrollYprojects.set(maxScroll);
-		}
-	});
 </script>
 
-<div class="project-gallery-container" style:opacity="{animationState.imageT}" bind:this={containerRef}>
+<div class="project-gallery-container" style:opacity="{animationState.imageT}">
 	{#if currentProject}
-		<div class="project-gallery-scroll" style:margin-top={-($scrollYprojects + 1) + "px"} bind:this={scrollContainerRef}>
+		<div class="project-gallery-scroll">
 			{#each $projectImages.get(currentProject.id) as image}
 				<div class="image-container">
 					<img src={image.src} alt="" />
@@ -44,8 +24,8 @@
 <style>
 	.project-gallery-container {
 		position: absolute;
-		height: 100vh; /* Set explicit height for viewport */
-		width: 50%;
+		height: 100vh;
+		width: 100%;
 		top: 0;
 		overflow: hidden; 
 	}

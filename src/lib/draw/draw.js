@@ -87,7 +87,8 @@ const drawPostFrames = (ctx) => {
 const drawMobileFrames = (ctx) => {
     const frames = get(mobileFrames);
 
-     frames.forEach(frame => {
+    frames.forEach(frame => {
+        frame.hoverMul = 1;
         frame.update();
     });
 

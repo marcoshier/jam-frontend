@@ -81,7 +81,6 @@ export class Frame {
     hoverMul = 0.0;
 
     update() {
-
         if(this.instant) {
             const pos = new Vector2(0, 0);
             this.pos = pos;
@@ -115,19 +114,26 @@ export class Frame {
         let rects = this.type === "b" ? get(postFrames) : get(projectFrames);
 
         if(get(isMobile)) {
-              rects = get(mobileFrames);
+            rects = get(mobileFrames);
 
-                const centerX = window.innerWidth / 2;
-                const centerY = window.innerHeight / 2;
-                
-                newPos.x = centerX - (this.width / 2);
-                newPos.y = centerY - (height / 2);
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            newPos.x = centerX - (this.width / 2);
+            newPos.y = centerY - (height / 2);
 
-                this.pos = newPos;
-                
-                this.smoothPos = this.pos.copy();
-                
-                this.height = height;
+            this.pos = newPos;
+            
+            this.smoothPos = this.pos.copy();
+            
+            this.height = height;
+
+            if(get(hoveredId) === this.id) {
+                this.hoverMul += 0.1;
+            } else {
+                this.hoverMul = 0.0;
+            }
+            this.hoverMul = Math.min(1.0, Math.max(0.0, this.hoverMul));
         } else {
             if(get(hoveredType) === this.type) {
                 const mouse = get(mousePos);
@@ -172,11 +178,7 @@ export class Frame {
                 this.hoverMul = 0.0;
             }
             this.hoverMul = Math.min(1.0, Math.max(0.0, this.hoverMul));
-
-            
         }
-
-        
     }
 
     drawImage(ctx, image, pos, alpha) {
@@ -222,9 +224,7 @@ export class Frame {
             this.hovered = get(hoveredType) === this.type && get(hoveredId) === this.id;
             const isLast = this.zOffset === maxZOffset;
 
-            // Handle posts (type "b") differently
             if (this.type === "b" && this.hovered) {
-                // Apply clipping if there's a next rect
                 if (nextRect) {
                     ctx.save();
                     ctx.beginPath();
@@ -234,7 +234,6 @@ export class Frame {
                     ctx.clip('evenodd');
                 }
                 
-                // Fill with grey
                 ctx.globalAlpha = alpha;
                 ctx.fillStyle = '#CCCCCC';
                 ctx.fillRect(pos.x, pos.y, this.width, this.height);
@@ -243,11 +242,14 @@ export class Frame {
                     ctx.restore();
                 }
             } else {
-                // Handle projects (type "p") - draw images
-                const shouldDrawImage = images && images.length > 0 && (isLast || this.hovered);
+                const shouldDrawImage = images && images.length > 0 && (
+                                            isLast || 
+                                            this.hovered || 
+                                            (get(isMobile) && get(hoveredId) === this.id)
+                                        );
 
                 if(shouldDrawImage) {
-                    if (this.hovered && nextRect) {
+                    if ((get(isMobile) || this.hovered) && nextRect) {
                         ctx.save();
                         ctx.beginPath();
                         ctx.rect(pos.x, pos.y, this.width, this.height);
@@ -262,7 +264,7 @@ export class Frame {
                     const image = images[imageIdx];
                     this.drawImage(ctx, image, pos, alpha);
                     
-                    if (this.hovered && nextRect) {
+                    if ((get(isMobile) || this.hovered) && nextRect) {
                         ctx.restore();
                     }
                 }

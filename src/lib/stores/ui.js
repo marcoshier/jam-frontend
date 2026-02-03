@@ -40,6 +40,13 @@ let chargeDecayInterval = null;
 
 let scrollTimeout;
 
+export const touchState = writable({
+    startY: 0,
+    startX: 0,
+    startTime: 0,
+    hasMoved: false
+});
+
 export const handleScroll = (e) => {
     scrolling.set(true);
     
@@ -165,23 +172,42 @@ export const handleClick = async (e) => {
 export const handleTouchStart = (e) => {
     e.preventDefault();
     scrolling.set(true);
-    touchStartY.set(e.touches[0].clientY);
+    
+    const touch = e.touches[0];
+    touchStartY.set(touch.clientY);
     scrollYmobile.set(0);
+    
+    touchState.set({
+        startY: touch.clientY,
+        startX: touch.clientX,
+        startTime: Date.now(),
+        hasMoved: false
+    });
 }
 
 export const handleTouchMove = (e) => {
     e.preventDefault();
     if (!get(scrolling)) return;
 
-    mousePos.set(new Vector2(window.innerWidth / 2.0, window.innerHeight / 2.0))
+    const touch = e.touches[0];
+    const state = get(touchState);
+    
+    const deltaX = Math.abs(touch.clientX - state.startX);
+    const deltaY = Math.abs(touch.clientY - state.startY);
+    const totalMovement = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    if (totalMovement > 10) {
+        touchState.update(s => ({ ...s, hasMoved: true }));
+    }
 
+    mousePos.set(new Vector2(window.innerWidth / 2.0, window.innerHeight / 2.0))
 
     const mih = get(mobileItemHeight);
 
     const items = get(mobileFrames);
     const nRects = items.length;
     
-    const touchY = e.touches[0].clientY;
+    const touchY = touch.clientY;
     const delta = touchY - get(touchStartY);
 
     scrollYmobile.set(delta);
@@ -204,29 +230,38 @@ export const handleTouchMove = (e) => {
         item.scroll = get(scrollZmobile);
     }
 
-     noiseCharge.update(c => Math.min(1, c + 0.15));
+    noiseCharge.update(c => Math.min(1, c + 0.15));
     
     if (chargeDecayInterval) {
         clearInterval(chargeDecayInterval);
         chargeDecayInterval = null;
     }
-
 }
 
 export const handleTouchEnd = (e) => {
     e.preventDefault();
+    
+    const state = get(touchState);
+    const touchDuration = Date.now() - state.startTime;
+    
+    const isTap = !state.hasMoved && touchDuration < 300;
+    
+    if (isTap) {
+        handleMobileTap(e);
+    } else {
+        const finalScroll = get(scrollYmobileAcc) + get(scrollYmobile);
+        scrollYmobileAcc.set(finalScroll);
+        scrollYmobile.set(0);
+        
+        const mih = get(mobileItemHeight);
+        const scrollInItems = -finalScroll / mih;
+        const nearestItem = Math.round(scrollInItems);
+        const targetScroll = -nearestItem * mih;
+        
+        animateScrollToTarget(finalScroll, targetScroll);
+    }
+    
     scrolling.set(false);
-    
-    const finalScroll = get(scrollYmobileAcc) + get(scrollYmobile);
-    scrollYmobileAcc.set(finalScroll);
-    scrollYmobile.set(0);
-    
-    const mih = get(mobileItemHeight);
-    const scrollInItems = -finalScroll / mih;
-    const nearestItem = Math.round(scrollInItems);
-    const targetScroll = -nearestItem * mih;
-    
-    animateScrollToTarget(finalScroll, targetScroll);
 
     chargeDecayInterval = setInterval(() => {
         noiseCharge.update(c => {
@@ -240,8 +275,32 @@ export const handleTouchEnd = (e) => {
     }, 16);
 }
 
+export const handleMobileTap = async (e) => {
+    const state = get(touchState);
+    const x = state.startX;
+    const y = state.startY;
+    
+    const frames = get(mobileFrames);
+    
+    for(let i = frames.length - 1; i >= 0; i--) {
+        const frame = frames[i];
+        if(frame.contains(x, y)) {
+            hoveredId.set(frame.id);
+            selectedId.set(frame.id);
+            selectedType.set("m");
+            frame.selected = true;
+            fadeInSelected();
+
+            const route = `/project/${frame.id}`;
+
+            await transitionTo(route);
+            break;
+        }
+    }
+}
+
 function animateScrollToTarget(from, to) {
-    const duration = 300; // ms
+    const duration = 300;
     const startTime = Date.now();
     
     function animate() {
@@ -270,7 +329,6 @@ export const resetSelection = () => {
 export const cleanupUI = () => {
     if(get(isMobile)) {
         window.removeEventListener('touchmove', handleTouchMove)
-       // window.removeEventListener('click', handleClick)
     } else {
         clearTimeout(scrollTimeout);
         window.removeEventListener('wheel', handleScroll)
@@ -285,7 +343,6 @@ export const setupListeners = () => {
         window.addEventListener('touchstart', handleTouchStart);
         window.addEventListener('touchmove', handleTouchMove);
         window.addEventListener('touchend', handleTouchEnd);
-       // window.addEventListener('click', handleClick)
     } else {
         window.addEventListener('wheel', handleScroll);
         window.addEventListener('wheel', handleMouseMove);
